@@ -16,7 +16,8 @@ from keras.models import load_model
 # Utility code.
 from src.load_data import load_data
 from src.load_glove_embeddings import load_embedding_matrix
-# from src.models.bi_lstm import BiLSTMModel
+from src.models.bi_lstm import BiLSTMModel
+from src.models.bi_lstm_attention import BiLSTMAttention
 from src.models.cnn import CNNModel
 
 TRAIN = True
@@ -42,7 +43,8 @@ embedding_matrix = load_embedding_matrix(glove_path=glove_path,
 
 vocab_size = len(word_index) + 1
 
-model_instance = CNNModel(num_classes=3)
+# model_instance = CNNModel(num_classes=3)
+model_instance = BiLSTMAttention(num_classes=3)
 
 if TRAIN:
 
