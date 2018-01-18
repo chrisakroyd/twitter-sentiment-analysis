@@ -19,7 +19,7 @@ class BiLSTMAttention:
         self.EPOCHS = EPOCHS
         self.LEARN_RATE = LEARN_RATE
         self.num_classes = num_classes
-        self.checkpoint_path = './model_checkpoints/bi_lstm.hdf5'
+        self.checkpoint_path = './model_checkpoints/bi_lstm_attention.hdf5'
 
     def create_model(self, vocab_size, embedding_matrix, input_length=5000, embed_dim=100):
         model = Sequential()

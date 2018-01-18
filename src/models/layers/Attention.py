@@ -13,6 +13,7 @@ def dot_product(x, kernel):
         return K.dot(x, kernel)
 
 
+# https://www.cs.cmu.edu/~diyiy/docs/naacl16.pdf
 class Attention(Layer):
     def __init__(self,
                  W_regularizer=None, b_regularizer=None,
@@ -71,7 +72,6 @@ class Attention(Layer):
 
         # in some cases especially in the early stages of training the sum may be almost zero
         # and this results in NaN's. A workaround is to add a very small positive number ε to the sum.
-        # a /= K.cast(K.sum(a, axis=1, keepdims=True), K.floatx())
         a /= K.cast(K.sum(a, axis=1, keepdims=True) + K.epsilon(), K.floatx())
 
         a = K.expand_dims(a)
