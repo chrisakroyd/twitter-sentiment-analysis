@@ -16,8 +16,8 @@ from keras.models import load_model
 # Utility code.
 from src.load_data import load_data
 from src.load_glove_embeddings import load_embedding_matrix
-from src.models.bi_lstm import BiLSTMModel
-from src.models.bi_lstm_attention import BiLSTMAttention
+from src.models.bi_rnn import BiLSTMModel
+from src.models.bi_rnn_attention import BiLSTMAttention
 from src.models.cnn import CNNModel
 
 TRAIN = True
@@ -27,7 +27,8 @@ MAX_FEATS = 5000
 
 # Paths to data sets
 tweet_path = './data/training.1600000.processed.noemoticon.csv'
-sem_eval_path = './data/SemEval2017-task4-dev.subtask-A.english.INPUT.txt'
+sem_eval_path = './data/full_dataset/'
+sem_eval_2017_path = './data/2017_dataset/'
 # Paths to glove embeddings.
 glove_path = './data/glove.twitter.27B/glove.twitter.27B.100d.txt'
 glove_embed_dims = 100
@@ -44,6 +45,7 @@ embedding_matrix = load_embedding_matrix(glove_path=glove_path,
 vocab_size = len(word_index) + 1
 
 # model_instance = CNNModel(num_classes=3)
+# model_instance = BiLSTMModel(num_classes=3)
 model_instance = BiLSTMAttention(num_classes=3)
 
 if TRAIN:

@@ -1,4 +1,4 @@
-from keras.layers import Conv1D, Dense, Embedding, GlobalMaxPool1D, MaxPooling1D, concatenate, Input, Dropout
+from keras.layers import Conv1D, Dense, Embedding, GlobalMaxPool1D, MaxPooling1D, concatenate, Input, Dropout, BatchNormalization, SpatialDropout1D
 from keras.models import Model
 from keras.optimizers import Adam
 from keras.regularizers import l2
@@ -24,17 +24,19 @@ class CNNModel:
 
         input_text = Input(shape=(input_length,), dtype='int32')
 
-        embed = Embedding(vocab_size, embed_dim, weights=[embedding_matrix], input_length=input_length, dropout=0.2)(input_text)
+        embed = Embedding(vocab_size, embed_dim, weights=[embedding_matrix], input_length=input_length)(input_text)
+        embed_drop = SpatialDropout1D(0.2)(embed)
+        batch_1 = BatchNormalization()(embed_drop)
 
-        feat_maps_1 = Conv1D(100, kernel_size=3, padding="same", activation="relu")(embed)
+        feat_maps_1 = Conv1D(100, kernel_size=3, padding="same", activation="relu")(batch_1)
         pool_vecs_1 = MaxPooling1D(pool_length=2)(feat_maps_1)
         pool_vecs_1 = GlobalMaxPool1D()(pool_vecs_1)
 
-        feat_maps_2 = Conv1D(100, kernel_size=4, padding="same", activation="relu")(embed)
+        feat_maps_2 = Conv1D(100, kernel_size=4, padding="same", activation="relu")(batch_1)
         pool_vecs_2 = MaxPooling1D(pool_size=2)(feat_maps_2)
         pool_vecs_2 = GlobalMaxPool1D()(pool_vecs_2)
 
-        feat_maps_3 = Conv1D(100, kernel_size=5, padding="same", activation="relu")(embed)
+        feat_maps_3 = Conv1D(100, kernel_size=5, padding="same", activation="relu")(batch_1)
         pool_vecs_3 = MaxPooling1D(pool_size=2)(feat_maps_3)
         pool_vecs_3 = GlobalMaxPool1D()(pool_vecs_3)
 

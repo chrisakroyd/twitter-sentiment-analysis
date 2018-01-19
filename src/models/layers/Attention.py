@@ -14,9 +14,8 @@ def dot_product(x, kernel):
 
 
 # https://www.cs.cmu.edu/~diyiy/docs/naacl16.pdf
-class Attention(Layer):
-    def __init__(self,
-                 W_regularizer=None, b_regularizer=None,
+class HierarchicalAttention(Layer):
+    def __init__(self, W_regularizer=None, b_regularizer=None,
                  W_constraint=None, b_constraint=None,
                  bias=True, **kwargs):
 
@@ -30,7 +29,7 @@ class Attention(Layer):
         self.b_constraint = constraints.get(b_constraint)
 
         self.bias = bias
-        super(Attention, self).__init__(**kwargs)
+        super(HierarchicalAttention, self).__init__(**kwargs)
 
     def build(self, input_shape):
         assert len(input_shape) == 3

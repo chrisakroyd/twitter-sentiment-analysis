@@ -9,6 +9,9 @@ from sklearn.utils import shuffle
 from keras.preprocessing.sequence import pad_sequences
 from keras.preprocessing.text import Tokenizer
 
+# Semeval tsv loader
+from .sem_eval_utilities import concat_load_tsvs
+
 RANDOM_SEED = 59185
 CONTROL_BALANCE = True
 DATASET_SIZE = 50000
@@ -24,11 +27,10 @@ def get_data_sent_140(path):
     return df[:DATASET_SIZE]
 
 
-def get_data_sem_eval(path):
-    df = pd.read_csv(path, names=['id', 'class', 'text', 'bl'], sep='\t')
-    df = df.drop(columns=['bl'])
+def get_data_sem_eval(data_dir):
+    df = concat_load_tsvs(data_dir)
+    print(df['class'].value_counts())
     return df
-
 
 def pre_process(df):
     new_df = pd.DataFrame.from_items([(name, pd.Series(data=None, dtype=series.dtype)) for name, series in df.iteritems()])
@@ -55,6 +57,8 @@ def load_data(path, data_set='sem_eval', max_features=5000,):
         df = get_data_sem_eval(path)
     elif data_set == 'sent_140':
         df = get_data_sent_140(path)
+    elif data_set == 'custom':
+        df = get_custom_data(path)
     else:
         print('INVALID DATA GENERATOR SPECIFIED')
 
@@ -67,7 +71,9 @@ def load_data(path, data_set='sem_eval', max_features=5000,):
 
     #
     X = pad_sequences(tokenizer.texts_to_sequences(data_set['text']))
-    y =label_binarizer.fit_transform(data_set['class'])
+    y = label_binarizer.fit_transform(data_set['class'])
+
+    print('Number of Data Samples:' + str(len(X)))
 
     x_train, x_val, y_train, y_val = train_test_split(X, y, test_size=0.2, stratify=y)
 
