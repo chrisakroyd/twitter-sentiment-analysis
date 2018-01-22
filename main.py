@@ -18,6 +18,7 @@ from src.load_data import load_data
 from src.load_glove_embeddings import load_embedding_matrix
 from src.models.bi_rnn import BiLSTMModel
 from src.models.bi_rnn_attention import BiLSTMAttention
+from src.models.bi_cudnn_rnn_attention import CUDNNBiRNNAttention
 from src.models.cnn import CNNModel
 
 TRAIN = True
@@ -30,13 +31,17 @@ tweet_path = './data/training.1600000.processed.noemoticon.csv'
 sem_eval_path = './data/full_dataset/'
 sem_eval_2017_path = './data/2017_dataset/'
 # Paths to glove embeddings.
-glove_path = './data/glove.twitter.27B/glove.twitter.27B.100d.txt'
-glove_embed_dims = 100
+glove_path = './data/glove.twitter.27B/glove.twitter.27B.200d.txt'
+glove_embed_dims = 200
 
 
-(x_train, y_train), (x_val, y_val), word_index = load_data(path=sem_eval_path,
+(x_train, y_train), (x_val, y_val), word_index, num_classes = load_data(path=sem_eval_2017_path,
                                                            data_set='sem_eval',
                                                            max_features=MAX_FEATS)
+
+# (x_train, y_train), (x_val, y_val), word_index, num_classes = load_data(path=tweet_path,
+#                                                            data_set='sent_140',
+#                                                            max_features=MAX_FEATS)
 
 embedding_matrix = load_embedding_matrix(glove_path=glove_path,
                                          word_index=word_index,
@@ -44,9 +49,12 @@ embedding_matrix = load_embedding_matrix(glove_path=glove_path,
 
 vocab_size = len(word_index) + 1
 
-# model_instance = CNNModel(num_classes=3)
-# model_instance = BiLSTMModel(num_classes=3)
-model_instance = BiLSTMAttention(num_classes=3)
+# model_instance = CNNModel(num_classes=num_classes)
+# model_instance = BiLSTMModel(num_classes=num_classes)
+# model_instance = BiLSTMAttention(num_classes=num_classes)
+model_instance = CUDNNBiRNNAttention(num_classes=num_classes)
+
+print(num_classes)
 
 if TRAIN:
 
@@ -57,9 +65,11 @@ if TRAIN:
                                         embed_dim=glove_embed_dims)
 
     tensorboard = TensorBoard(log_dir='./logs/{}'.format(time.time()), batch_size=model_instance.BATCH_SIZE)
-    checkpoint = ModelCheckpoint(model_instance.checkpoint_path, monitor='val_loss')
+
+    checkpoint = ModelCheckpoint(model_instance.checkpoint_path, save_best_only=True)
+
     early_stop = EarlyStopping(monitor='val_loss',
-                               patience=12,
+                               patience=6,
                                verbose=1,
                                min_delta=0.00001)
 

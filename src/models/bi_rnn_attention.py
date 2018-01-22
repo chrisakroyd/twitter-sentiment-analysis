@@ -2,7 +2,7 @@ from keras.layers import Dense, Embedding, Bidirectional, Dropout, GRU, BatchNor
 from keras.models import Sequential
 from keras.optimizers import RMSprop
 
-from .layers.Attention import HierarchicalAttention as Attention
+from .layers.Attention import FeedForwardAttention as Attention
 from .metrics import f1
 
 # HPARAMs
