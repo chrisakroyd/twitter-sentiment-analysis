@@ -1,8 +1,6 @@
 from keras import backend as K
 from keras.engine.topology import Layer
-from keras import constraints
-from keras import initializers
-from keras import regularizers
+from keras import constraints, initializers, regularizers
 
 
 def dot_product(x, kernel):
@@ -13,41 +11,41 @@ def dot_product(x, kernel):
         return K.dot(x, kernel)
 
 
-# https://www.cs.cmu.edu/~diyiy/docs/naacl16.pdf
-class HierarchicalAttention(Layer):
-    def __init__(self, W_regularizer=None, b_regularizer=None,
-                 W_constraint=None, b_constraint=None,
-                 bias=True, **kwargs):
+# http://colinraffel.com/publications/iclr2016feed.pdf
+class FeedForwardAttention(Layer):
+    def __init__(self, kernel_regularizer=None, bias_regularizer=None,
+                 kernel_constraint=None, bias_constraint=None,
+                 use_bias=True, **kwargs):
 
         self.supports_masking = True
         self.init = initializers.get('glorot_uniform')
 
-        self.W_regularizer = regularizers.get(W_regularizer)
-        self.b_regularizer = regularizers.get(b_regularizer)
+        self.kernel_regularizer = regularizers.get(kernel_regularizer)
+        self.bias_regularizer = regularizers.get(bias_regularizer)
 
-        self.W_constraint = constraints.get(W_constraint)
-        self.b_constraint = constraints.get(b_constraint)
+        self.kernel_constraint = constraints.get(kernel_constraint)
+        self.bias_constraint = constraints.get(bias_constraint)
 
-        self.bias = bias
-        super(HierarchicalAttention, self).__init__(**kwargs)
+        self.use_bias = use_bias
+        super(FeedForwardAttention, self).__init__(**kwargs)
 
     def build(self, input_shape):
         assert len(input_shape) == 3
 
-        self.W = self.add_weight((input_shape[-1],),
-                                 initializer=self.init,
-                                 name='{}_W'.format(self.name),
-                                 regularizer=self.W_regularizer,
-                                 constraint=self.W_constraint)
-        if self.bias:
-            self.b = self.add_weight((input_shape[1],),
-                                     initializer='zero',
-                                     name='{}_b'.format(self.name),
-                                     regularizer=self.b_regularizer,
-                                     constraint=self.b_constraint)
+        self.kernel = self.add_weight((input_shape[-1],),
+                                      initializer=self.init,
+                                      name='{}_W'.format(self.name),
+                                      regularizer=self.kernel_regularizer,
+                                      constraint=self.kernel_constraint)
+        if self.use_bias:
+            self.bias = self.add_weight((input_shape[1],),
+                                        initializer='zero',
+                                        name='{}_b'.format(self.name),
+                                        regularizer=self.bias_regularizer,
+                                        constraint=self.bias_constraint)
         else:
-            self.b = None
-
+            self.bias = None
+        self.trainable_weights = [self.kernel]
         self.built = True
 
     def compute_mask(self, input, input_mask=None):
@@ -55,28 +53,24 @@ class HierarchicalAttention(Layer):
         return None
 
     def call(self, x, mask=None):
-        eij = dot_product(x, self.W)
+        eij = dot_product(x, self.kernel)
 
-        if self.bias:
-            eij += self.b
+        if self.use_bias:
+            eij += self.bias
 
         eij = K.tanh(eij)
 
         a = K.exp(eij)
 
-        # apply mask after the exp. will be re-normalized next
+        # apply mask.
         if mask is not None:
-            # Cast the mask to floatX to avoid float64 upcasting in theano
             a *= K.cast(mask, K.floatx())
 
-        # in some cases especially in the early stages of training the sum may be almost zero
-        # and this results in NaN's. A workaround is to add a very small positive number ε to the sum.
         a /= K.cast(K.sum(a, axis=1, keepdims=True) + K.epsilon(), K.floatx())
-
         a = K.expand_dims(a)
+        # Calculate the weighted sum.
         weighted_input = x * a
         return K.sum(weighted_input, axis=1)
 
     def compute_output_shape(self, input_shape):
         return input_shape[0], input_shape[-1]
-
