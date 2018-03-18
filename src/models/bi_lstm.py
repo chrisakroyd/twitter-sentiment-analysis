@@ -1,7 +1,7 @@
 from keras.layers import Dense, Embedding, LSTM, Bidirectional, BatchNormalization
 from keras.models import Sequential
 from keras.optimizers import Adam
-from .metrics import f1
+from src.metrics import f1
 
 # HPARAMs
 BATCH_SIZE = 64
@@ -16,7 +16,6 @@ class BiLSTMModel:
         self.EPOCHS = EPOCHS
         self.LEARN_RATE = LEARN_RATE
         self.num_classes = num_classes
-        self.checkpoint_path = './model_checkpoints/bi_lstm.hdf5'
 
     def create_model(self, vocab_size, embedding_matrix, input_length=5000, embed_dim=100):
         model = Sequential()

@@ -3,7 +3,7 @@ from keras.models import Model
 from keras.optimizers import Adam
 from keras.regularizers import l2
 
-from .metrics import f1
+from src.metrics import f1
 
 # HPARAMs
 BATCH_SIZE = 64
@@ -18,7 +18,6 @@ class CNNModel:
         self.EPOCHS = EPOCHS
         self.LEARN_RATE = LEARN_RATE
         self.num_classes = num_classes
-        self.checkpoint_path = './model_checkpoints/conv_3_model.hdf5'
 
     def create_model(self, vocab_size, embedding_matrix, input_length=5000, embed_dim=100):
 

@@ -11,20 +11,18 @@ if 'tensorflow' == K.backend():
     set_session(tf.Session(config=config))
 
 from keras.callbacks import TensorBoard, ModelCheckpoint, EarlyStopping, ReduceLROnPlateau
-from keras.models import load_model
-
 # Utility code.
 from src.load_data import load_data
-from src.load_glove_embeddings import load_embedding_matrix
-from src.models.bi_rnn import BiLSTMModel
-from src.models.bi_rnn_attention import BiLSTMAttention
-from src.models.bi_cudnn_rnn_attention import CUDNNBiRNNAttention
-from src.models.cnn import CNNModel
+from src.load_embeddings import load_embeddings, load_afinn_matrix
+from src.util import get_save_path
+# Models
+from src.models.bi_lstm_attention import BiLSTMAttention
+from src.models.bi_lstm_conc_pool import BiLSTMConcPool
 
 TRAIN = True
 PRODUCTION = True
 WRITE_RESULTS = True
-MAX_FEATS = 5000
+MAX_FEATS = 150000
 
 # Paths to data sets
 tweet_path = './data/training.1600000.processed.noemoticon.csv'
@@ -32,41 +30,49 @@ sem_eval_path = './data/full_dataset/'
 sem_eval_2017_path = './data/2017_dataset/'
 # Paths to glove embeddings.
 glove_path = './data/glove.twitter.27B/glove.twitter.27B.200d.txt'
-glove_embed_dims = 200
+embed_dims = 200
+embed_type = 'GLOVE'
 
 
-(x_train, y_train), (x_val, y_val), word_index, num_classes = load_data(path=sem_eval_2017_path,
+# (x_train, y_train), (x_val, y_val), word_index, num_classes = load_data(path=sem_eval_2017_path,
+#                                                            data_set='sem_eval',
+#                                                            max_features=MAX_FEATS)
+
+(x_train, y_train), (x_val, y_val), word_index, num_classes = load_data(path=sem_eval_path,
                                                            data_set='sem_eval',
                                                            max_features=MAX_FEATS)
-
+#
 # (x_train, y_train), (x_val, y_val), word_index, num_classes = load_data(path=tweet_path,
 #                                                            data_set='sent_140',
 #                                                            max_features=MAX_FEATS)
 
-embedding_matrix = load_embedding_matrix(glove_path=glove_path,
-                                         word_index=word_index,
-                                         embedding_dimensions=glove_embed_dims)
+embedding_matrix = load_embeddings(path=glove_path,
+                                   embedding_type=embed_type,
+                                   word_index=word_index,
+                                   max_features=MAX_FEATS,
+                                   embedding_dimensions=embed_dims)
+
+afinn_matrix = load_afinn_matrix(word_index)
 
 vocab_size = len(word_index) + 1
 
-# model_instance = CNNModel(num_classes=num_classes)
-# model_instance = BiLSTMModel(num_classes=num_classes)
-# model_instance = BiLSTMAttention(num_classes=num_classes)
-model_instance = CUDNNBiRNNAttention(num_classes=num_classes)
+# model_instance = BiLSTMConcPool(num_classes=num_classes)
+model_instance = BiLSTMAttention(num_classes=num_classes)
 
 print(num_classes)
 
 if TRAIN:
 
     print(x_train.shape)
-    model = model_instance.create_model(vocab_size,
+    model = model_instance.build(vocab_size,
                                         embedding_matrix,
+                                 afinn_matrix,
                                         input_length=x_train.shape[1],
-                                        embed_dim=glove_embed_dims)
+                                        embed_dim=embed_dims)
 
     tensorboard = TensorBoard(log_dir='./logs/{}'.format(time.time()), batch_size=model_instance.BATCH_SIZE)
 
-    checkpoint = ModelCheckpoint(model_instance.checkpoint_path, save_best_only=True)
+    checkpoint = ModelCheckpoint(get_save_path(model_instance), save_best_only=True)
 
     early_stop = EarlyStopping(monitor='val_loss',
                                patience=6,
@@ -87,4 +93,4 @@ if TRAIN:
               callbacks=[tensorboard, checkpoint, early_stop])
 
 elif PRODUCTION:
-    model = load_model(model_instance.checkpoint_path)
+    model = get_save_path(model_instance)

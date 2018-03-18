@@ -14,7 +14,9 @@ from .sem_eval_utilities import concat_load_tsvs
 
 RANDOM_SEED = 59185
 CONTROL_BALANCE = True
-DATASET_SIZE = 500000
+DATASET_SIZE = 250000
+# DATASET_SIZE = 50
+SEQUENCE_LENGTH = 75
 
 mentions_regex = re.compile('(?<=^|(?<=[^a-zA-Z0-9-_.]))@([A-Za-z_]+[A-Za-z0-9_]+)')
 hash_tag_regex = re.compile('(?<=^|(?<=[^a-zA-Z0-9-_.]))#([A-Za-z]+[A-Za-z0-9]+)')
@@ -47,16 +49,53 @@ def pre_process(df):
     new_df = pd.DataFrame.from_items([(name, pd.Series(data=None, dtype=series.dtype)) for name, series in df.iteritems()])
     rows = []
 
+    FLAGS = re.MULTILINE | re.DOTALL
+
+    def hashtag(text):
+        text = text.group()
+        hashtag_body = text[1:]
+        if hashtag_body.isupper():
+            result = "<hashtag> {} <allcaps>".format(hashtag_body)
+        else:
+            result = " ".join(["<hashtag>"] + re.split(r"(?=[A-Z])", hashtag_body, flags=FLAGS))
+        return result
+
+    def allcaps(text):
+        text = text.group()
+        return text.lower() + " <allcaps>"
+
+    def tokenize(text):
+        # Different regex parts for smiley faces
+        eyes = r"[8:=;]"
+        nose = r"['`\-]?"
+
+        # function so code less repetitive
+        def re_sub(pattern, repl):
+            return re.sub(pattern, repl, text, flags=FLAGS)
+
+        text = re_sub(r"https?:\/\/\S+\b|www\.(\w+\.)+\S*", "<url>")
+        text = re_sub(r"{}{}[)dD]+|[)dD]+{}{}".format(eyes, nose, nose, eyes), "<smile>")
+        text = re_sub(r"{}{}p+".format(eyes, nose), "<lolface>")
+        text = re_sub(r"{}{}\(+|\)+{}{}".format(eyes, nose, nose, eyes), "<sadface>")
+        text = re_sub(r"{}{}[\/|l*]".format(eyes, nose), "<neutralface>")
+        text = re_sub(r"/", " / ")
+        text = re_sub(r"@\w+", "<user>")
+        text = re_sub(r"<3", "<heart>")
+        text = re_sub(r"[-+]?[.\d]*[\d]+[:,.\d]*", "<number>")
+        text = re_sub(r"#\S+", hashtag)
+        text = re_sub(r"([!?.]){2,}", r"\1 <repeat>")
+        text = re_sub(r"\b(\S*?)(.)\2{2,}\b", r"\1\2 <elong>")
+
+        text = mentions_regex.sub('<mention>', text)
+        text = re_sub(r"([A-Z]){2,}", allcaps)
+
+        return text.lower()
+
     # This is not my best work but it was the only way i could get it all working.
     # @TODO Revist with a fresh perspective.
     for index, tweet in df.iterrows():
         try:
-            tweet['text'] = mentions_regex.sub('<MENTION>', tweet['text'])
-            tweet['text'] = hash_tag_regex.sub('<HASH_TAG>', tweet['text'])
-            tweet['text'] = url_regex.sub('<URL>', tweet['text'])
-            tweet['text'] = emo_pos_regex.sub('<EMO_POS>', tweet['text'])
-            tweet['text'] = emo_neg_regex.sub('<EMO_NEG>', tweet['text'])
-            tweet['text'] = collapse_letters_regex.sub(r'\1\1', tweet['text'])
+            tweet['text'] = tokenize(tweet['text'])
             rows.append(tweet)
         except:
             pass
@@ -81,8 +120,7 @@ def load_data(path, data_set='sem_eval', max_features=5000,):
     tokenizer.fit_on_texts(data_set.text)
     word_index = tokenizer.word_index
 
-    #
-    X = pad_sequences(tokenizer.texts_to_sequences(data_set['text']))
+    X = pad_sequences(tokenizer.texts_to_sequences(data_set['text']), maxlen=SEQUENCE_LENGTH)
     y = label_binarizer.fit_transform(data_set['class'])
 
     if len(label_binarizer.classes_) == 2:
