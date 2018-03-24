@@ -52,8 +52,6 @@ class BiLSTMAttention:
         model = self.create_model(vocab_size, embedding_matrix, input_length, embed_dim)
 
         model.compile(loss='categorical_crossentropy', optimizer=RMSprop(lr=self.LEARN_RATE, clipnorm=CLIP_NORM),
-        # model.compile(loss='categorical_crossentropy', optimizer=Nadam(lr=self.LEARN_RATE, clipnorm=CLIP_NORM),
-        # model.compile(loss='categorical_crossentropy', optimizer=Adam(lr=self.LEARN_RATE, clipnorm=CLIP_NORM),
                       metrics=['accuracy', f1])
 
         if summary:
