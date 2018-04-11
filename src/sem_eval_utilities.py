@@ -42,11 +42,14 @@ def concat_load_tsvs(data_dir, save_path=None):
     for counter, file in enumerate(glob.glob(data_dir + "*.tsv")):
         # Read the tsvs generated from the previous years script https://github.com/seirasto/twitter_download
         # and the pre-downloaded version from the 2017 txt file formatted as a CSV.
-        curr_file = pd.read_csv(file, names=['id', 'class', 'text'], sep='\t')
+        curr_file = pd.read_csv(file, names=['id', 'class', 'text'], sep='\t', encoding='latin-1',
+                                dtype={'id': 'int', 'class': 'str', 'text': 'str'})
         full_data_set = full_data_set.append(curr_file)
 
     full_data_set = full_data_set.set_index('id')
     full_data_set = full_data_set.drop_duplicates('text')
+
+    full_data_set['text'] = full_data_set['text'].apply(lambda x: x.encode('utf-8').decode('raw_unicode_escape'))
 
     if save_path:
         full_data_set.to_csv(save_path, sep='\t', header=False)

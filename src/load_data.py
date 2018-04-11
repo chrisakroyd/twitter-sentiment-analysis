@@ -15,6 +15,7 @@ from .sem_eval_utilities import concat_load_tsvs
 RANDOM_SEED = 59185
 CONTROL_BALANCE = True
 DATASET_SIZE = 250000
+# DATASET_SIZE = 50000
 # DATASET_SIZE = 50
 SEQUENCE_LENGTH = 75
 
@@ -35,8 +36,8 @@ def get_data_sent_140(path):
     df['class'] = df['class'].replace({0: 'negative', 4: 'positive'})
     print(df['class'].value_counts())
     df = shuffle(df)
-    # return df[:DATASET_SIZE]
-    return df
+    return df[:DATASET_SIZE]
+    # return df
 
 
 def get_data_sem_eval(data_dir):

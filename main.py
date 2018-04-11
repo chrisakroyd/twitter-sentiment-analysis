@@ -41,7 +41,7 @@ embed_type = 'GLOVE'
 (x_train, y_train), (x_val, y_val), word_index, num_classes = load_data(path=sem_eval_path,
                                                            data_set='sem_eval',
                                                            max_features=MAX_FEATS)
-#
+# #
 # (x_train, y_train), (x_val, y_val), word_index, num_classes = load_data(path=tweet_path,
 #                                                            data_set='sent_140',
 #                                                            max_features=MAX_FEATS)
@@ -57,7 +57,6 @@ afinn_matrix = load_afinn_matrix(word_index)
 vocab_size = len(word_index) + 1
 
 model_instance = BiLSTMConcPool(num_classes=num_classes)
-# model_instance = BiLSTMAttention(num_classes=num_classes)
 
 print(num_classes)
 
