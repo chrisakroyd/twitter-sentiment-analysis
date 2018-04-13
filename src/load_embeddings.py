@@ -5,6 +5,24 @@ from afinn import Afinn
 emotive_words = Afinn()
 
 
+def add_custom_embeddings(embedding_index):
+    dimension = len(embedding_index[list(embedding_index.keys())[0]])
+    embedding_index['<date>'] = np.full((dimension, ), 0.145)
+    embedding_index['<percent>'] = np.full((dimension,), 0.135)
+    embedding_index['<score>'] = np.full((dimension,), 0.115)
+    embedding_index['<currency>'] = np.full((dimension,), 0.105)
+    embedding_index['<email>'] = np.full((dimension,), 0.095)
+    embedding_index['<kisses>'] = np.full((dimension,), 0.085)
+
+    if '<hashtag>' in embedding_index:
+        embedding_index['</hashtag>'] = embedding_index['<hashtag>']
+    else:
+        embedding_index['<hashtag>'] = np.full((dimension, ), 0.125)
+        embedding_index['</hashtag>'] = np.full((dimension, ), 0.125)
+
+    return embedding_index
+
+
 def read_embeddings_file(path, embedding_type):
     embedding_index = {}
     print('Reading {} file...'.format(embedding_type))
@@ -17,6 +35,9 @@ def read_embeddings_file(path, embedding_type):
             word = values[0]
             coefs = np.asarray(values[1:], dtype='float32')
             embedding_index[word] = coefs
+
+    embedding_index = add_custom_embeddings(embedding_index)
+
     return embedding_index
 
 

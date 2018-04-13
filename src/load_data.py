@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
-import re
+
+from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.utils import shuffle
@@ -11,33 +12,20 @@ from keras.preprocessing.text import Tokenizer
 
 # Semeval tsv loader
 from .sem_eval_utilities import concat_load_tsvs
+from .preprocessor import TextPreProcessor
 
 RANDOM_SEED = 59185
 CONTROL_BALANCE = True
 DATASET_SIZE = 250000
-# DATASET_SIZE = 50000
-# DATASET_SIZE = 50
-SEQUENCE_LENGTH = 75
-
-mentions_regex = re.compile('(?<=^|(?<=[^a-zA-Z0-9-_.]))@([A-Za-z_]+[A-Za-z0-9_]+)')
-hash_tag_regex = re.compile('(?<=^|(?<=[^a-zA-Z0-9-_.]))#([A-Za-z]+[A-Za-z0-9]+)')
-url_regex = re.compile('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
-# Smile, Laugh, Love, Wink emoticon regex : :), : ), :-), (:, ( :, (-:, :'), :D, : D, :-D, xD, x-D, XD, X-D,
-# <3, ;-), ;), ;-D, ;D, (;, (-;
-emo_pos_regex = re.compile('(:\s?\)|:-\)|\(\s?:|\(-:|:\'\))|(:\s?D|:-D|x-?D|X-?D)|(<3)|(;-?\)|;-?D|\(-?;)')
-# Sad & Cry emoticon regex: :-(, : (, :(, ):, )-:, :,(, :'(, :"(
-emo_neg_regex = re.compile('(:\s?\(|:-\(|\)\s?:|\)-:)|(:,\(|:\'\(|:"\()')
-
-collapse_letters_regex = re.compile('(.)\1+')
+SEQUENCE_LENGTH = 40
 
 
-def get_data_sent_140(path):
+def get_data_sent_140(path, dataset_size=DATASET_SIZE):
     df = pd.read_csv(path, names=['class', 'id', 'date', 'query', 'user', 'text'], encoding='latin-1')
     df['class'] = df['class'].replace({0: 'negative', 4: 'positive'})
     print(df['class'].value_counts())
     df = shuffle(df)
-    return df[:DATASET_SIZE]
-    # return df
+    return df[:dataset_size]
 
 
 def get_data_sem_eval(data_dir):
@@ -47,56 +35,14 @@ def get_data_sem_eval(data_dir):
 
 
 def pre_process(df):
+    preprocessor = TextPreProcessor()
     new_df = pd.DataFrame.from_items([(name, pd.Series(data=None, dtype=series.dtype)) for name, series in df.iteritems()])
     rows = []
-
-    FLAGS = re.MULTILINE | re.DOTALL
-
-    def hashtag(text):
-        text = text.group()
-        hashtag_body = text[1:]
-        if hashtag_body.isupper():
-            result = "<hashtag> {} <allcaps>".format(hashtag_body)
-        else:
-            result = " ".join(["<hashtag>"] + re.split(r"(?=[A-Z])", hashtag_body, flags=FLAGS))
-        return result
-
-    def allcaps(text):
-        text = text.group()
-        return text.lower() + " <allcaps>"
-
-    def tokenize(text):
-        # Different regex parts for smiley faces
-        eyes = r"[8:=;]"
-        nose = r"['`\-]?"
-
-        # function so code less repetitive
-        def re_sub(pattern, repl):
-            return re.sub(pattern, repl, text, flags=FLAGS)
-
-        text = re_sub(r"https?:\/\/\S+\b|www\.(\w+\.)+\S*", "<url>")
-        text = re_sub(r"{}{}[)dD]+|[)dD]+{}{}".format(eyes, nose, nose, eyes), "<smile>")
-        text = re_sub(r"{}{}p+".format(eyes, nose), "<lolface>")
-        text = re_sub(r"{}{}\(+|\)+{}{}".format(eyes, nose, nose, eyes), "<sadface>")
-        text = re_sub(r"{}{}[\/|l*]".format(eyes, nose), "<neutralface>")
-        text = re_sub(r"/", " / ")
-        text = re_sub(r"@\w+", "<user>")
-        text = re_sub(r"<3", "<heart>")
-        text = re_sub(r"[-+]?[.\d]*[\d]+[:,.\d]*", "<number>")
-        text = re_sub(r"#\S+", hashtag)
-        text = re_sub(r"([!?.]){2,}", r"\1 <repeat>")
-        text = re_sub(r"\b(\S*?)(.)\2{2,}\b", r"\1\2 <elong>")
-
-        text = mentions_regex.sub('<mention>', text)
-        text = re_sub(r"([A-Z]){2,}", allcaps)
-
-        return text.lower()
-
     # This is not my best work but it was the only way i could get it all working.
     # @TODO Revist with a fresh perspective.
-    for index, tweet in df.iterrows():
+    for index, tweet in tqdm(df.iterrows()):
         try:
-            tweet['text'] = tokenize(tweet['text'])
+            tweet['text'] = preprocessor.preprocess(tweet['text'])
             rows.append(tweet)
         except:
             pass
@@ -116,7 +62,7 @@ def load_data(path, data_set='sem_eval', max_features=5000,):
 
     data_set = pre_process(df)
 
-    tokenizer = Tokenizer(num_words=max_features)
+    tokenizer = Tokenizer(num_words=max_features, filters='"%()*+,-:;=[\]^_`{|}~]')
     label_binarizer = LabelBinarizer()
     tokenizer.fit_on_texts(data_set.text)
     word_index = tokenizer.word_index

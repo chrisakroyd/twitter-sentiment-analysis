@@ -57,6 +57,7 @@ afinn_matrix = load_afinn_matrix(word_index)
 vocab_size = len(word_index) + 1
 
 model_instance = BiLSTMConcPool(num_classes=num_classes)
+# model_instance = BiLSTMAttention(num_classes=num_classes)
 
 print(num_classes)
 
