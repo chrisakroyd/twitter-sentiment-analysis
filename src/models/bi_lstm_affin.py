@@ -5,6 +5,7 @@ from keras.optimizers import Nadam
 from src.metrics import f1
 
 from keras.backend import squeeze, sum
+from src.models.TextModel import TextModel
 
 # HPARAMs
 BATCH_SIZE = 128
@@ -13,7 +14,7 @@ LEARN_RATE = 0.001
 NUM_CLASSES = 12
 
 
-class BiLSTMConcPool:
+class BiLSTMConcPool(TextModel):
     def __init__(self, num_classes=NUM_CLASSES):
         self.BATCH_SIZE = BATCH_SIZE
         self.EPOCHS = EPOCHS

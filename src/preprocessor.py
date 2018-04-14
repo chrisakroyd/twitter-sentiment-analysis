@@ -1,6 +1,8 @@
 import re
 from ftfy import fix_text
 from unidecode import unidecode
+from afinn import Afinn
+from collections import Counter
 
 FLAGS = re.MULTILINE | re.DOTALL
 
@@ -32,7 +34,7 @@ scores_regex = re.compile(REGEX_LOOKUP['SCORES'])
 control_chars = re.compile('[\n\t\r\v\f\0]')
 
 parenthesis_regex = re.compile('([\[\]()])')
-hearts_regex = re.compile(r'<3')
+hearts_regex = re.compile(r'(♥)|(<3{1,})')
 users_regex = re.compile("@\w+")
 tokenize_punct = re.compile(r'([.,?!"]{1})')
 repeated_punct = re.compile('([!?.]){2,}')
@@ -138,16 +140,18 @@ class TextPreProcessor:
         def re_sub(pattern, repl):
             return re.sub(pattern, repl, text, flags=FLAGS)
 
-        eyes = r"[8:=;X]"
-        nose = r"['`\-0]?"
+        loleyes = r"[8:=;]"
+        eyes = r"[8:=;Xx]"
+        nose = r"['`^\-0Oo]?"
 
-        text = re_sub(r"{}{}[)dD]+|[)dD]+{}{}".format(eyes, nose, nose, eyes), ' <smile> ')
-        text = re_sub(r"{}{}p+".format(eyes, nose), ' <lolface> ')
-        text = re_sub(r"{}{}\(+|\)+{}{}".format(eyes, nose, nose, eyes), ' <sadface> ')
-        text = re_sub(r"{}{}[\/|l*]".format(eyes, nose), ' <neutralface> ')
+        text = re_sub(r"\B{}{}[)dD>]+|\b[<(dD]+{}{}".format(eyes, nose, nose, eyes), ' <smile> ')
+        text = re_sub(r"\B{}{}[pPbB]+".format(loleyes, nose), ' <lolface> ')
+        text = re_sub(r"\B{}{}[(?]+|\)+{}{}".format(eyes, nose, nose, eyes), ' <sadface> ')
+        text = re_sub(r"\B{}{}[\/\\|l]".format(eyes, nose), ' <neutralface> ')
+        text = re_sub(r"\B{}{}[*]".format(eyes, nose), ' <kisses> ')
 
-        # Replace kisses e.g. xx
-        text = re.sub(r'\sx{1,}', ' <kisses> ', text)
+        # Replace kisses e.g. xx, xoxoxo
+        text = re.sub(r'(\b([Xx][Oo]){1,}\b)|(\b[Xx]{2,}\b)|(\b[Xx]$)', ' <kisses> ', text)
 
         return text
 
@@ -227,3 +231,47 @@ class TextPreProcessor:
             text = '<EMPTY>'
 
         return text.strip().lower()
+
+
+def create_polarity_dict():
+    words = Afinn(emoticons=True)
+    preprocessor = TextPreProcessor()
+
+    # Emojis are replaced with annotiations e.g. :) -> <smile> and :D -> <smile> perform the same process on the afinn keys
+    emoji_keys = [':)', ':(', ':|', ':]', ':[', ':}', ':{', ':/', ':\\', ':*', ':-)', ':-(', ':-|', ':-]', ':-[', ':-}',
+                  ':-?', ':->', ':-*', ':-D', ':-P', ':-S', ':-p', ':-/', ':D', ':P', ':S', ':p', ':o)', ":'(", '(:',
+                  '):', '(-:', ')-:', ';-(', ';)', ';(', ';-)', ';-D', '=(', '=/', '=\\', '=^/', '=P', '\\o/', '♥',
+                  ':-))', ':-)))', ':-))))', ':-)))))', ':-))))))', ':-)))))))', ':-))))))))', ':-)))))))))', '://',
+                  ':))', ':)))', ':))))', ':)))))', ':))))))', ':)))))))', ':))))))))', ':)))))))))', ':))))))))))',
+                  ':-((', ':-(((', ':-((((', ':((', ';))', ';)))', '<3', '<33', '<333', '<3333', '<33333', '<333333',
+                  '<3333333', '<33333333', '<333333333', '8(', '8)', '8-D', '8-)', '8-(', 'X-D', 'x-D']
+    emoji_type_lookup = {}
+
+    for key in emoji_keys:
+        val = preprocessor.replace_smileys(key).split()[0].strip()
+
+        if val == key:
+            val = hearts_regex.sub('<heart>', key)
+
+        if not val == key:
+            emoji_type_lookup[key] = val
+
+    annotation_counts = Counter(emoji_type_lookup.values())
+    annotation_polarity = {}
+
+    for key in emoji_type_lookup:
+        annotation = emoji_type_lookup[key]
+        annotation_polarity[annotation] = annotation_polarity.get(annotation, 0) + words.score(key)
+
+    for key in annotation_polarity:
+        annotation_polarity[key] /= annotation_counts[key]
+    # Create a fresh afinn scorer
+    words = Afinn()
+    # Grab the thing we care about
+    polarity_dict = words._dict
+
+    # Add our annotation polarity scores to the afinn dict.
+    for key in annotation_polarity:
+        polarity_dict[key] = annotation_polarity[key]
+
+    return polarity_dict

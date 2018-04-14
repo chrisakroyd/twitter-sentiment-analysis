@@ -14,6 +14,7 @@ from keras.callbacks import TensorBoard, ModelCheckpoint, EarlyStopping, ReduceL
 # Utility code.
 from src.load_data import load_data
 from src.load_embeddings import load_embeddings, load_afinn_matrix
+from src.preprocessor import create_polarity_dict
 from src.util import get_save_path
 # Models
 from src.models.bi_lstm_attention import BiLSTMAttention
@@ -52,7 +53,8 @@ embedding_matrix = load_embeddings(path=glove_path,
                                    max_features=MAX_FEATS,
                                    embedding_dimensions=embed_dims)
 
-afinn_matrix = load_afinn_matrix(word_index)
+polarity = create_polarity_dict()
+afinn_matrix = load_afinn_matrix(word_index, polarity)
 
 vocab_size = len(word_index) + 1
 

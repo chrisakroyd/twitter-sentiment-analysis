@@ -5,16 +5,17 @@ from keras.optimizers import RMSprop, Nadam, Adam
 
 from ..layers.Attention import FeedForwardAttention as Attention
 from src.metrics import f1
+from src.models.TextModel import TextModel
 
 # HPARAMs
 BATCH_SIZE = 128
 EPOCHS = 50
 LEARN_RATE = 0.001
-CLIP_NORM = 1.0
+CLIP_NORM = 5.0
 NUM_CLASSES = 12
 
 
-class BiLSTMAttention:
+class BiLSTMAttention(TextModel):
     def __init__(self, num_classes=5):
         self.BATCH_SIZE = BATCH_SIZE
         self.EPOCHS = EPOCHS

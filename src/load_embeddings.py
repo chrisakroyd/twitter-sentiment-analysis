@@ -1,8 +1,5 @@
 import numpy as np
 from tqdm import tqdm
-from afinn import Afinn
-
-emotive_words = Afinn()
 
 
 def add_custom_embeddings(embedding_index):
@@ -60,11 +57,11 @@ def load_embedding_matrix(embedding_index, word_index, max_features, embedding_d
     return embedding_matrix, oov_count
 
 
-def load_afinn_matrix(word_index):
+def load_afinn_matrix(word_index, polarity_dict):
     print('Generating embedding matrix...')
     embedding_matrix = np.zeros((len(word_index) + 1, 1))
     for word, i in tqdm(word_index.items()):
-        embedding_vector = emotive_words._dict.get(word)
+        embedding_vector = polarity_dict.get(word)
         if embedding_vector is not None:
             # words not found in afinn will be all-zeros.
             embedding_matrix[i] = np.array(embedding_vector)

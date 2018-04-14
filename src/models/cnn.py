@@ -4,6 +4,7 @@ from keras.optimizers import Adam
 from keras.regularizers import l2
 
 from src.metrics import f1
+from src.models.TextModel import TextModel
 
 # HPARAMs
 BATCH_SIZE = 64
@@ -12,7 +13,7 @@ LEARN_RATE = 0.0001
 NUM_CLASSES = 12
 
 
-class CNNModel:
+class CNNModel(TextModel):
     def __init__(self, num_classes=5):
         self.BATCH_SIZE = BATCH_SIZE
         self.EPOCHS = EPOCHS
