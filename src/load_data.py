@@ -4,7 +4,7 @@ import numpy as np
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
-from sklearn.utils import shuffle
+from sklearn.utils import shuffle as shuff
 
 # Tokenize and sequence padding.
 from keras.preprocessing.sequence import pad_sequences
@@ -16,16 +16,18 @@ from .preprocessor import TextPreProcessor
 
 RANDOM_SEED = 59185
 CONTROL_BALANCE = True
-DATASET_SIZE = 250000
+DATASET_SIZE = 1200000
 SEQUENCE_LENGTH = 40
 
 
-def get_data_sent_140(path, dataset_size=DATASET_SIZE):
+def get_data_sent_140(path, dataset_size=DATASET_SIZE, shuffle=True):
     df = pd.read_csv(path, names=['class', 'id', 'date', 'query', 'user', 'text'], encoding='latin-1')
     df['class'] = df['class'].replace({0: 'negative', 4: 'positive'})
+    if shuffle:
+        df = shuff(df)
+    df = df[:dataset_size]
     print(df['class'].value_counts())
-    df = shuffle(df)
-    return df[:dataset_size]
+    return df
 
 
 def get_data_sem_eval(data_dir):

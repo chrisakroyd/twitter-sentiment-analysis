@@ -17,8 +17,9 @@ from src.load_embeddings import load_embeddings, load_afinn_matrix
 from src.preprocessor import create_polarity_dict
 from src.util import get_save_path
 # Models
-from src.models.bi_lstm_attention import BiLSTMAttention
-from src.models.bi_lstm_conc_pool import BiLSTMConcPool
+from src.models.lstm_attention import BiLSTMAttention
+from src.models.lstm_attention_skip import BiLSTMAttentionSkip
+from src.models.lstm_conc_pool import BiLSTMConcPool
 
 TRAIN = True
 PRODUCTION = True
@@ -38,7 +39,7 @@ embed_type = 'GLOVE'
 # (x_train, y_train), (x_val, y_val), word_index, num_classes = load_data(path=sem_eval_2017_path,
 #                                                            data_set='sem_eval',
 #                                                            max_features=MAX_FEATS)
-
+#
 (x_train, y_train), (x_val, y_val), word_index, num_classes = load_data(path=sem_eval_path,
                                                            data_set='sem_eval',
                                                            max_features=MAX_FEATS)
@@ -58,8 +59,9 @@ afinn_matrix = load_afinn_matrix(word_index, polarity)
 
 vocab_size = len(word_index) + 1
 
-model_instance = BiLSTMConcPool(num_classes=num_classes)
+# model_instance = BiLSTMConcPool(num_classes=num_classes)
 # model_instance = BiLSTMAttention(num_classes=num_classes)
+model_instance = BiLSTMAttentionSkip(num_classes=num_classes)
 
 print(num_classes)
 

@@ -14,9 +14,10 @@ REGEX_LOOKUP = {
     "TIME": "(?:(?:\d+)?\.?\d+(?:AM|PM|am|pm|a\.m\.|p\.m\.))|(?:(?:[0-2]?[0-9]|[2][0-3]):(?:[0-5][0-9])(?::(?:[0-5][0-9]))?(?: ?(?:AM|PM|am|pm|a\.m\.|p\.m\.))?)",
     "MONEY": "(?:[$€£¢]\d+(?:[\.,']\d+)?(?:[MmKkBb](?:n|(?:il(?:lion)?))?)?)|(?:\d+(?:[\.,']\d+)?[$€£¢])",
     "URL": "http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
-    "NUMBERS": "[-+]?[.\d]*[\d]+[:,.\d]*",
-    "PERCENT": "(\d+.)*\d+\s{0,1}%",
-    "SCORES": "\d+\s*-\s*\d+"
+    #     "NUMBERS": "[-+]?[.\d]*[\d]+[:,.\d]*",
+    "NUMBERS": "[-+]?([\d]+[.\d]*)",
+    "PERCENT": "[-+]?([\d]+[.\d]*)\s{0,1}%",
+    "SCORES": "\d+\s{0,1}-\s{0,1}\d+"
 }
 
 # Preprocessing Regex's
@@ -45,6 +46,7 @@ emphasis_regex = re.compile('(\*)(?:\w+ ?){1,}(\*)')
 hashtag_regex = re.compile("#\S+")
 mentions_regex = re.compile('(?<=^|(?<=[^a-zA-Z0-9-_.]))@([A-Za-z_]+[A-Za-z0-9_]+)')
 
+hashtag_splitter_regex = re.compile(r'((?<=[a-z])[A-Z]|[A-Z](?=[a-z]))')
 # seperates things like the'
 seperate_apostrophes = re.compile("(\w+)('\w*)")
 # seperates things like 'the
@@ -56,32 +58,24 @@ def allcaps(text):
     return text.lower() + " <allcaps> "
 
 
-def hashtag(text):
-    text = text.group()
-    hashtag_body = text[1:]
-    if hashtag_body.isupper():
-        result = " <hashtag> {} <allcaps> ".format(hashtag_body)
-    else:
-        test_regex = re.compile(r'((?<=[a-z])[A-Z]|[A-Z](?=[a-z]))')
-        hashtag_body = test_regex.sub(r' \1', hashtag_body)
-        result = " ".join([" <hashtag>"] + hashtag_body.split(r"(?=[A-Z])") + ["</hashtag> "])
-    return result
-
-
-def emphasis(text):
-    text = text.group()
-    emph_body = text[1:-1]
-    result = " ".join(["<emphasis>"] + emph_body.split(r"(?=[A-Z])") + ["</emphasis>"])
-    return result
-
-
 class TextPreProcessor:
     def __init__(self, embedding_profile=None):
         self.embedding_profile = embedding_profile
 
     def preprocess(self, string):
         string = self.clean(string)
+        # Add annotations e.g. 11:55pm -> Time
+        string = self.annotate(string)
+
         return string
+
+    def clean(self, text):
+        # Fix unicode characters
+        text = fix_text(text)
+        text = unidecode(text)
+        # Replace newline and other control characters
+        text = control_chars.sub(' ', text)
+        return text
 
     def unpack_contractions(self, text):
         """
@@ -155,13 +149,7 @@ class TextPreProcessor:
 
         return text
 
-    def clean(self, text):
-        # Fix unicode characters
-        text = fix_text(text)
-        text = unidecode(text)
-
-        # Replace newline and other control characters
-        text = control_chars.sub(' ', text)
+    def annotate_basic_attributes(self, text):
         # Replace ips
         text = ip_regex.sub(' <ip> ', text)
         # Replace URLs
@@ -178,7 +166,37 @@ class TextPreProcessor:
         text = percent_regex.sub(' <percent> ', text)
         # Replaces simple sport scores etc.
         text = scores_regex.sub(' <score> ', text)
+        return text
 
+    def annotate_hashtags(self, text):
+        def hashtag(text):
+            text = text.group()
+            hashtag_body = text[1:]
+            if hashtag_body.isupper():
+                result = " <hashtag> {} <allcaps> ".format(hashtag_body)
+            else:
+                hashtag_body = hashtag_splitter_regex.sub(r' \1', hashtag_body)
+                result = " ".join([" <hashtag>"] + hashtag_body.split(r"(?=[A-Z])") + ["</hashtag> "])
+            return result
+
+        text = re.sub(r'#', ' #', text)
+        text = hashtag_regex.sub(hashtag, text)
+
+        return text
+
+    def annotate_text_features(self, text):
+        # Add in repeat annotation
+        text = repeated_punct.sub(r' \1 <repeat> ', text)
+
+        text = tokenize_punct.sub(r' \1 ', text)
+        # Add in annotations for all-caps and elongated words
+        text = all_caps_regex.sub(allcaps, text)
+        text = elongated_words.sub(r"\1\2 <elong> ", text)
+        return text
+
+    def annotate(self, text):
+        # Annotate basic variables e.g. IP, URL's, Dates, times, scores etc.
+        text = self.annotate_basic_attributes(text)
         # Unpack can't -> can not, c'mon -> come on
         text = self.unpack_contractions(text)
         # 1st, 2nd, 3rd  -> First, Second, Third. Performed post-date annotation so we don't remove any useful details
@@ -192,9 +210,7 @@ class TextPreProcessor:
         # Add in wraparound annotations which surround text
         # Introduce a space before hash symbols to prevent issues where hastags are next to each other
         # e.g. #test#chicken
-        text = re.sub(r'#', ' #', text)
-        text = hashtag_regex.sub(hashtag, text)
-        #         text = emphasis_regex.sub(emphasis, text)
+        text = self.annotate_hashtags(text)
 
         # Replace <3 (less than three) with the more meaningful <heart> annotation
         text = hearts_regex.sub(' <heart> ', text)
@@ -204,13 +220,8 @@ class TextPreProcessor:
         text = parenthesis_regex.sub(r' \1 ', text)
         # Remove multi spaces - Prevents errant <repeat> signals appearing in text
         text = re.sub('\s+', ' ', text)
-        # Add in repeat annotation
-        text = repeated_punct.sub(r' \1 <repeat> ', text)
-
-        text = tokenize_punct.sub(r' \1 ', text)
-        # Add in annotations for all-caps and elongated words
-        text = all_caps_regex.sub(allcaps, text)
-        text = elongated_words.sub(r"\1\2 <elong> ", text)
+        # Annotate text features e.g. elongated words, repeated punctuation.
+        text = self.annotate_text_features(text)
 
         # Expand out common text symbols
         text = text.replace('&', ' and ')
