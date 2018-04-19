@@ -5,8 +5,12 @@ from keras.regularizers import l2
 
 class TextModel:
     def embedding_layers(self, tensor, vocab_size, embedding_matrix, dropout=0.5, noise=0.2, input_length=5000,
-                         embed_dim=200):
-        embedding = Embedding(vocab_size, embed_dim, weights=[embedding_matrix], input_length=input_length)(tensor)
+                         embed_dim=200, embeddings_regularizer=None):
+        embedding = Embedding(vocab_size,
+                              embed_dim,
+                              weights=[embedding_matrix],
+                              embeddings_regularizer=embeddings_regularizer,
+                              input_length=input_length)(tensor)
 
         spatial_dropout_1 = SpatialDropout1D(dropout)(embedding)
 

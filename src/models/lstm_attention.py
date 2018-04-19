@@ -1,9 +1,9 @@
-from keras.layers import Input, Dense, Bidirectional, Dropout, concatenate, SpatialDropout1D, CuDNNLSTM
+from keras.layers import Input, Dense, Bidirectional, Dropout, CuDNNLSTM
 from keras.regularizers import l2
-from keras.optimizers import RMSprop, Nadam, Adam
+from keras.optimizers import RMSprop
 from keras.models import Model
 from ..layers.Attention import FeedForwardAttention as Attention
-from src.metrics import f1
+from src.metrics import f1, precision, recall
 from src.models.TextModel import TextModel
 
 # HPARAMs
@@ -57,7 +57,8 @@ class BiLSTMAttention(TextModel):
         model = self.create_model(vocab_size, embedding_matrix, input_length, embed_dim)
 
         model.compile(loss='categorical_crossentropy', optimizer=RMSprop(lr=self.LEARN_RATE, clipnorm=CLIP_NORM),
-                      metrics=['accuracy', f1])
+        # model.compile(loss='categorical_crossentropy', optimizer=RMSprop(lr=self.LEARN_RATE),
+                      metrics=[precision, recall, f1])
 
         if summary:
             model.summary()

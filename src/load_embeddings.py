@@ -4,12 +4,17 @@ from tqdm import tqdm
 
 def add_custom_embeddings(embedding_index):
     dimension = len(embedding_index[list(embedding_index.keys())[0]])
+    # Empty tag is only introduced when there is no text - Should not occur
+    embedding_index['<empty>'] = np.full((dimension,), 0.999)
+    # Add a vector for my custom tags - at least until own embeddings are trained.
+    embedding_index['<ip>'] = np.full((dimension,), 0.155)
     embedding_index['<date>'] = np.full((dimension, ), 0.145)
     embedding_index['<percent>'] = np.full((dimension,), 0.135)
     embedding_index['<score>'] = np.full((dimension,), 0.115)
     embedding_index['<currency>'] = np.full((dimension,), 0.105)
     embedding_index['<email>'] = np.full((dimension,), 0.095)
     embedding_index['<kisses>'] = np.full((dimension,), 0.085)
+    embedding_index['<emphasis>'] = np.full((dimension,), 0.075)
 
     if '<hashtag>' in embedding_index:
         embedding_index['</hashtag>'] = embedding_index['<hashtag>']
@@ -38,7 +43,7 @@ def read_embeddings_file(path, embedding_type):
     return embedding_index
 
 
-def load_embedding_matrix(embedding_index, word_index, max_features, embedding_dimensions):
+def load_embedding_matrix(embedding_index, word_index, max_features, embedding_dimensions, rand_oov=True):
     print('Generating embedding matrix...')
     embedding_matrix = np.zeros((len(word_index) + 1, embedding_dimensions))
     oov_count = 0
@@ -49,6 +54,10 @@ def load_embedding_matrix(embedding_index, word_index, max_features, embedding_d
             # words not found in embedding index will be all-zeros.
             embedding_matrix[i] = embedding_vector
         else:
+            # Give OOV's an embedding for the word 'something' until i bother to train my own embeddings with an <OOV>
+            # character
+            embedding_matrix[i] = embedding_index.get('something')
+
             oov_count += 1
 
     print('{} Unique words (vocab size).'.format(len(embedding_matrix)))
