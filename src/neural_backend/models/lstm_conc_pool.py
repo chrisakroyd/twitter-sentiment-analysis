@@ -1,11 +1,11 @@
 from keras.layers import Input, Dense, Embedding, Bidirectional, SpatialDropout1D, CuDNNLSTM, concatenate,\
     GlobalAveragePooling1D, Dropout, Lambda
 from keras.models import Model
-from keras.optimizers import Nadam, RMSprop, Adam
-from src.metrics import f1
-from keras.backend import sum, epsilon
+from keras.optimizers import RMSprop
+from metrics import f1
+from keras.backend import sum
 from keras.regularizers import l2
-from src.models.TextModel import ConcPoolModel
+from models.TextModel import ConcPoolModel
 
 import tensorflow as tf
 

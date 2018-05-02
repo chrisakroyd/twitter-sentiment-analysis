@@ -3,8 +3,8 @@ from keras.models import Model
 from keras.optimizers import Adam
 from keras.regularizers import l2
 
-from src.metrics import f1
-from src.models.TextModel import TextModel
+from metrics import f1
+from models.TextModel import TextModel
 
 # HPARAMs
 BATCH_SIZE = 64

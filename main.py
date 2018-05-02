@@ -1,4 +1,6 @@
 import keras.backend as K
+import os
+import sys
 
 # Only use the amount of memory we require rather than the maximum
 if 'tensorflow' == K.backend():
@@ -9,17 +11,21 @@ if 'tensorflow' == K.backend():
     config.gpu_options.visible_device_list = "0"
     set_session(tf.Session(config=config))
 
+module_path = os.path.abspath(os.path.join('./src/neural_backend'))
+
+print(module_path)
+
+if module_path not in sys.path:
+    sys.path.append(module_path)
+
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 # Utility code.
-from src.load_data import load_data
-from src.load_embeddings import load_embeddings, load_afinn_matrix
-from src.preprocessor import create_polarity_dict
-from src.util import get_save_path
+from src.neural_backend.load_data import load_data
+from src.neural_backend.load_embeddings import load_embeddings, load_afinn_matrix
+from src.neural_backend.preprocessor import create_polarity_dict
+from src.neural_backend.util import get_save_path
 # Models
-from src.models.lstm_attention import BiLSTMAttention
-from src.models.lstm_attention_skip import BiLSTMAttentionSkip
-from src.models.lstm_attention_affin import BiLSTMAttentionAffin
-from src.models.lstm_conc_pool import BiLSTMConcPool
+from src.neural_backend.models.lstm_attention import BiLSTMAttention
 
 TRAIN = True
 PRODUCTION = True

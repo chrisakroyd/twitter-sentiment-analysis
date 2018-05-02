@@ -3,8 +3,8 @@ from keras.regularizers import l2
 from keras.optimizers import RMSprop
 from keras.models import Model
 from ..layers.Attention import FeedForwardAttention as Attention
-from src.metrics import f1, precision, recall
-from src.models.TextModel import TextModel
+from metrics import f1, precision, recall
+from models.TextModel import TextModel
 
 # HPARAMs
 BATCH_SIZE = 128

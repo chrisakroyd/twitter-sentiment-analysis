@@ -1,6 +1,5 @@
 from keras.layers import concatenate, GlobalMaxPooling1D, GlobalAveragePooling1D, Embedding, SpatialDropout1D, \
-    GaussianNoise, Conv1D, Activation, BatchNormalization
-from keras.regularizers import l2
+    GaussianNoise
 
 
 class TextModel:

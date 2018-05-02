@@ -2,10 +2,10 @@ from keras.layers import Input, Dense, Embedding, Bidirectional, SpatialDropout1
     GaussianNoise, CuDNNLSTM, concatenate, GlobalAveragePooling1D, GlobalMaxPooling1D, Dropout, BatchNormalization, Lambda
 from keras.models import Model
 from keras.optimizers import Nadam
-from src.metrics import f1
+from keras.backend import squeeze
 
-from keras.backend import squeeze, sum
-from src.models.TextModel import TextModel
+from metrics import f1
+from models.TextModel import TextModel
 
 # HPARAMs
 BATCH_SIZE = 128
