@@ -15,14 +15,13 @@ const defaultLimit = 10;
 // Get model status
 
 router.get('/status', (req, res) => {
-  res.send({
-    neuralStatus: {
-      load: 0,
-      model: '',
-      graphicsCard: '',
-      memoryUsage: 0,
-    },
+  const generatedResponse = responseGenerator(req, {
+    load: 5,
+    model: 'BiLSTM Attention',
+    graphicsCard: '1080 Ti',
+    memoryUsage: 1.2,
   });
+  res.send(generatedResponse);
 });
 
 // Get a random sample of tweets from either live api or train data.
@@ -49,13 +48,13 @@ router.post('/tweets/process', (req, res) => {
 // Get a list of datasets/embeddings
 
 router.get('/datasets/', (req, res) => {
-  const data = fakeNewsGenerator();
+  const data = [];
   const generatedResponse = responseGenerator(req, data);
   res.send(generatedResponse);
 });
 
 router.get('/embeddings/', (req, res) => {
-  const data = fakeNewsGenerator(req.query.limit || defaultLimit);
+  const data = [];
   const generatedResponse = responseGenerator(req, data);
   res.send(generatedResponse);
 });
@@ -63,14 +62,14 @@ router.get('/embeddings/', (req, res) => {
 // list of models and results per model.
 
 router.get('/models/', (req, res) => {
-  const data = fakeNewsGenerator();
+  const data = [];
   const generatedResponse = responseGenerator(req, data);
   res.send(generatedResponse);
 });
 
 router.get('/models/results', (req, res) => {
-  const data = fakeNewsGenerator();
-  const generatedResponse = responseGeneratorr(req, data);
+  const data = [];
+  const generatedResponse = responseGenerator(req, data);
   res.send(generatedResponse);
 });
 
