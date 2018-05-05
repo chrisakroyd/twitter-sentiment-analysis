@@ -5,6 +5,7 @@ function tweetGenerator(limit) {
 
   for (let i = 0; i < limit; i++) {
     const generatedNewsItem = {
+      tweetId: faker.random.number(),
       username: faker.internet.userName(),
       text: faker.lorem.words(),
     };

@@ -5,6 +5,7 @@ function procssedTweetGenerator(limit) {
 
   for (let i = 0; i < limit; i++) {
     const generatedTweets = {
+      tweetId: faker.random.number(),
       username: faker.internet.userName(),
       text: faker.lorem.words(),
       tokenized: faker.lorem.words(),

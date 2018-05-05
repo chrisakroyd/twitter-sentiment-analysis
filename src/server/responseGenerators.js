@@ -1,50 +1,71 @@
 const queryString = require('query-string');
-const faker = require('faker');
-const etag = require('etag');
 
-const maxLimit = 30;
-const defaultLimit = 10;
-// Faker query time generation.
-const max = 3;
-const min = 0.2;
+const maxPageSize = 50;
+const defaultPageSize = 10;
 
 
 function getValidQuery(req) {
   return {
-    searchTerms: req.query.q,
-    limit: req.query.limit && req.query.limit < maxLimit ? req.query.limit : defaultLimit,
-    offset: req.query.offset ? req.query.offset : 0,
+    search: req.query.search,
+    filter: req.query.filter,
+    page_size: req.query.page_size && req.query.page_size < maxPageSize ?
+      parseInt(req.query.page_size, 10) : defaultPageSize,
+    start: req.query.start ? parseInt(req.query.start, 10) : 0,
   };
 }
 
-function responseGenerator(req, responseData = []) {
+function generatePageValues(query) {
+  const nextQuery = {
+    start: query.start + query.page_size,
+    page_size: query.page_size,
+  };
+
+  const prevQuery = {
+    start: query.start - query.page_size,
+    page_size: query.page_size,
+  };
+
+  return { nextQuery, prevQuery };
+}
+
+function getAPIRoute(req, query, apiVersion = 'v1') {
+  let apiRoute = null;
+
+  if (query.start >= 0) {
+    apiRoute = `/api/${apiVersion}${req.path}?${queryString.stringify(query)}`;
+  }
+
+  return apiRoute;
+}
+
+function responseGenerator(req, responseData = {}) {
   return {
     self: req.originalUrl,
-    next: `${req.hostname}${req.path}`,
-    etag: etag(responseData.toString()),
     data: responseData,
-    queryTime: parseFloat(((Math.random() * (max - min + 1)) + min).toFixed(2)),
-    totalResults: responseData.length,
+    error_code: null,
+    error_message: null,
   };
 }
 
 
 function pagedResponseGenerator(req, responseData = []) {
   const currQuery = getValidQuery(req);
-  const nextQuery = {
-    limit: currQuery.limit,
-    offset: currQuery.offset + currQuery.limit,
-  };
+  const { nextQuery, prevQuery } = generatePageValues(currQuery);
 
   return {
+    // The URL sent, the url for the next page and the previous page, null if no next or prev page.
     self: req.originalUrl,
-    next: `${req.hostname}${req.path}?${queryString.stringify(nextQuery)}`,
-    etag: etag(responseData.toString()),
+    next: getAPIRoute(req, nextQuery),
+    prev: getAPIRoute(req, prevQuery),
+    // Page related attributes for the paged response.
+    start: currQuery.start,
+    page_size: currQuery.page_size,
+    page: Math.round(currQuery.start / currQuery.page_size),
+    // Data for the response
     data: responseData,
-    queryTime: parseFloat(((Math.random() * (max - min + 1)) + min).toFixed(2)),
-    totalResults: faker.random.number({ min: 60000, max: 180000 }),
-    limit: nextQuery.limit,
-    offset: nextQuery.offset,
+    // Any errors.
+    error_code: null,
+    error_message: null,
   };
 }
 

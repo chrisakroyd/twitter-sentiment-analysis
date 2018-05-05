@@ -48,14 +48,25 @@ router.post('/tweets/process', (req, res) => {
 // Get a list of datasets/embeddings
 
 router.get('/datasets/', (req, res) => {
-  const data = [];
-  const generatedResponse = responseGenerator(req, data);
+  const data = [{
+    name: 'SemEval',
+    rows: 45000,
+    labels: ['positive', 'negative', 'neutral'],
+    positive: 22000,
+    negative: 8000,
+    neutral: 15000,
+  }];
+  const generatedResponse = pagedResponseGenerator(req, data);
   res.send(generatedResponse);
 });
 
 router.get('/embeddings/', (req, res) => {
-  const data = [];
-  const generatedResponse = responseGenerator(req, data);
+  const data = [{
+    name: 'SemEval',
+    vocabSize: 45000,
+    dimensionality: 300,
+  }];
+  const generatedResponse = pagedResponseGenerator(req, data);
   res.send(generatedResponse);
 });
 
@@ -63,13 +74,13 @@ router.get('/embeddings/', (req, res) => {
 
 router.get('/models/', (req, res) => {
   const data = [];
-  const generatedResponse = responseGenerator(req, data);
+  const generatedResponse = pagedResponseGenerator(req, data);
   res.send(generatedResponse);
 });
 
 router.get('/models/results', (req, res) => {
   const data = [];
-  const generatedResponse = responseGenerator(req, data);
+  const generatedResponse = pagedResponseGenerator(req, data);
   res.send(generatedResponse);
 });
 
