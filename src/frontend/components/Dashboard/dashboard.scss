@@ -1,0 +1,33 @@
+$dash-body-margin: 30px 60px;
+$spinner-size: 60px;
+$sidebar-width: 100px;
+
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+
+  .loading-spinner-container {
+    margin: $dash-body-margin;
+    height: calc(100vh - 151px - 50px);
+
+    .react-spinners--bounce {
+      height: $spinner-size;
+      width: $spinner-size;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+  }
+
+  .dash-body {
+    margin: $dash-body-margin;
+    padding-left: $sidebar-width;
+    .body-header {
+      h1 {
+        font-size: 48px;
+      }
+    }
+  }
+}

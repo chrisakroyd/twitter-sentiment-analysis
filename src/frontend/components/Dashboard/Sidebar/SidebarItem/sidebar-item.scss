@@ -1,0 +1,21 @@
+.sidebar-item {
+  color: #777a80;
+  width: 100%;
+  margin: 32px 0;
+  cursor: pointer;
+  transition: color 0.5s;
+  &:hover, .highlighted {
+    //color: #FBFBFB;
+    color: #ff936c;
+  }
+  i {
+    font-size: 36px;
+    display: block;
+    text-align:center;
+  }
+  .item-label {
+    text-align: center;
+    font-size: 14px;
+    margin: 6px 0;
+  }
+}

@@ -1,0 +1,31 @@
+.confidence-gauge {
+  position: relative;
+  display: block;
+  height: 2.8rem;
+  border: 2px solid #022C72;
+  border-radius: .5rem;
+  clear: left;
+  margin-top: 15px;
+  width: 720px;
+
+  .confidence-level {
+    min-width: 4rem;
+    height: 100%;
+    display: block;
+    background-color: #022C72;
+    text-align: right;
+    padding: 0 .5rem;
+    color: #fff;
+    box-sizing: border-box;
+  }
+
+  span {
+    color: #222;
+    display: block;
+    position: absolute;
+    font-weight: 400;
+    bottom: -2.1rem;
+    left: 0;
+    width: 25rem;
+  }
+}

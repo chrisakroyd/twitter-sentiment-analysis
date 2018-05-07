@@ -1,0 +1,11 @@
+.sidebar {
+  width: 90px;
+  position:fixed;
+  height:calc(100% - 60px);
+  background-color: rgba(27, 23, 28, 1);
+  padding-top: 60px;
+
+  &.sidebar-open {
+    width: 100px;
+  }
+}
