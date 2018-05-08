@@ -26,6 +26,7 @@ from src.neural_backend.preprocessor import create_polarity_dict
 from src.neural_backend.util import get_save_path
 # Models
 from src.neural_backend.models.lstm_attention import BiLSTMAttention
+from src.neural_backend.models.lstm_conc_pool import BiLSTMConcPool
 
 TRAIN = True
 PRODUCTION = True
@@ -46,7 +47,7 @@ embed_type = 'GLOVE'
 #                                                            data_set='sem_eval',
 #                                                            max_features=MAX_FEATS)
 #
-(x_train, y_train), (x_val, y_val), word_index, num_classes = load_data(path=sem_eval_path,
+(x_train, y_train), (x_val, y_val), word_index, num_classes, lb = load_data(path=sem_eval_path,
                                                            data_set='sem_eval',
                                                            max_features=MAX_FEATS)
 # #
