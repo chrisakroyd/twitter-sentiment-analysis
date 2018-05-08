@@ -1,8 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import shortId from 'shortid';
-import './results.scss';
-
 import ResultTile from './ResultTile/ResultTile';
 import resultShape from '../../../prop-shapes/resultShape';
 

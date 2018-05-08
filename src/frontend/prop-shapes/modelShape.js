@@ -3,15 +3,13 @@ import PropTypes from 'prop-types';
 export default PropTypes.shape({
   name: PropTypes.string.isRequired,
   size: PropTypes.string.isRequired,
+  lastModified: PropTypes.string.isRequired,
   timePerEpoch: PropTypes.number.isRequired,
-  learningRate: PropTypes.number.isRequired,
+  learnRate: PropTypes.number.isRequired,
   clipNorm: PropTypes.number.isRequired,
-  topK: PropTypes.number.isRequired,
   optimizer: PropTypes.string.isRequired,
-  bestAccuracy: PropTypes.number.isRequired,
-  bestF1Score: PropTypes.number.isRequired,
-  lastRun: '',
-  classes: PropTypes.number.isRequired,
+  embedDrop: PropTypes.number.isRequired,
+  noise: PropTypes.number.isRequired,
   architecture: PropTypes.shape({
     embeddingDim: PropTypes.number.isRequired,
     rnnUnits: PropTypes.number.isRequired,
@@ -23,6 +21,7 @@ export default PropTypes.shape({
     },
     attention: PropTypes.bool.isRequired,
     concPool: PropTypes.bool.isRequired,
+    topK: PropTypes.number.isRequired,
     classes: PropTypes.number.isRequired,
   }).isRequired,
 });

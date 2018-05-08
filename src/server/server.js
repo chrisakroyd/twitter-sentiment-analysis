@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-
+const gpuInfo = require('gpu-info');
 const tweetGenerator = require('./tweetGenerator.js');
 const processedTweetGenerator = require('./processedTweetGenerator.js');
 const responseGenerators = require('./responseGenerators.js');
@@ -15,6 +15,10 @@ const defaultLimit = 10;
 // Get model status
 
 router.get('/status', (req, res) => {
+  gpuInfo().then((data) => {
+    console.log('GPUS:', data);
+  });
+
   const generatedResponse = responseGenerator(req, {
     load: 5,
     model: 'BiLSTM Attention',

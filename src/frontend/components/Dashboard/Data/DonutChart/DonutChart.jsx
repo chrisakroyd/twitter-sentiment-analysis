@@ -9,13 +9,15 @@ const width = 250;
 const height = 200;
 const animDuration = 1000;
 
+const color_test = ['#46cea6', '#ababab', '#f65177'];
+
 class DonutChart extends React.Component {
   componentDidMount() {
     const faux = this.props.connectFauxDOM('div', 'chart');
     const dataset = this.preprocessData(this.props.statistics);
     const outerRadius = Math.min(width - 50, height - 50) / 2;
     const innerRadius = outerRadius - 15;
-    const color = d3.scaleOrdinal(d3.schemeCategory10);
+    const color = d3.scaleOrdinal(color_test);
 
     const pie = d3.pie()
       .value(d => d.percent)

@@ -5,23 +5,26 @@ import modelShape from '../../../../prop-shapes/modelShape';
 
 const ModelTile = ({ model }) =>
   (
-    <div className="data-tile tile">
+    <div className="model-tile tile">
       <div className="tile-header">
-        <h3>{name}</h3>
+        <h3>{model.name} - {model.lastModified}</h3>
       </div>
       <div className="tile-body">
-        <div className="data-stats">
-          <h4>Dataset Size</h4>
-          <p>{size}</p>
-          <h4>Unique Words</h4>
-          <p>{words}</p>
-          <h4>Best Model on Dataset</h4>
-          <p>{bestModel}</p>
-          <h4>Highest Model F1-Score</h4>
-          <p>{bestF1Score}%</p>
+        <div className="model-visualiser">
+          <h4>{model.name} Neural Visualisation</h4>
+          <div className="visualisation">
+
+          </div>
         </div>
-        <div className="class-breakdown">
-          <h4>Class Breakdown</h4>
+        <div className="result-stats">
+          <h4>Parameters</h4>
+          <p>{model.size}</p>
+          <h4>Time Per Epoch</h4>
+          <p>{model.timePerEpoch}</p>
+          <h4>Optimizer</h4>
+          <p>{model.optimizer}</p>
+          <h4>Learn Rate / Clip Norm / Noise / Dropout</h4>
+          <p>{model.learnRate} / {model.clipNorm}% / {model.noise} / {model.embedDrop}</p>
         </div>
       </div>
     </div>
