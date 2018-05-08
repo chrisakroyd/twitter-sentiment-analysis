@@ -8,7 +8,7 @@ from .attention_utils import dot_product
 class FeedForwardAttention(Layer):
     def __init__(self, kernel_regularizer=None, bias_regularizer=None,
                  kernel_constraint=None, bias_constraint=None,
-                 use_bias=True, **kwargs):
+                 use_bias=True, return_attention=False, **kwargs):
 
         self.supports_masking = True
         self.init = initializers.get('glorot_uniform')
@@ -20,6 +20,7 @@ class FeedForwardAttention(Layer):
         self.bias_constraint = constraints.get(bias_constraint)
 
         self.use_bias = use_bias
+        self.return_attention = return_attention
         super(FeedForwardAttention, self).__init__(**kwargs)
 
     def build(self, input_shape):
@@ -63,10 +64,22 @@ class FeedForwardAttention(Layer):
             a *= K.cast(mask, K.floatx())
 
         a /= K.cast(K.sum(a, axis=1, keepdims=True) + K.epsilon(), K.floatx())
+
+        att_weights = a
+
         a = K.expand_dims(a)
         # Calculate the weighted sum.
         weighted_input = x * a
-        return K.sum(weighted_input, axis=1)
+
+        result = K.sum(weighted_input, axis=1)
+
+        if self.return_attention:
+            return [result, att_weights]
+
+        return result
 
     def compute_output_shape(self, input_shape):
+        if self.return_attention:
+            return [(input_shape[0], input_shape[-1]), (input_shape[0], input_shape[1])]
         return input_shape[0], input_shape[-1]
+        # return input_shape[0], input_shape[-1]

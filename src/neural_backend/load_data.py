@@ -64,7 +64,7 @@ def load_data(path, data_set='sem_eval', max_features=5000,):
 
     data_set = pre_process(df)
 
-    tokenizer = Tokenizer(num_words=max_features, filters='"%()*+,-:;=[\]^_`{|}~]')
+    tokenizer = Tokenizer(num_words=max_features, filters='"%()*+-:;=[\]^_`{|}~]')
     label_binarizer = LabelBinarizer()
     tokenizer.fit_on_texts(data_set.text)
     word_index = tokenizer.word_index
@@ -80,4 +80,4 @@ def load_data(path, data_set='sem_eval', max_features=5000,):
     x_train, x_val, y_train, y_val = train_test_split(X, y, test_size=0.2, stratify=y)
     num_classes = len(label_binarizer.classes_)
 
-    return (np.array(x_train), np.array(y_train)), (np.array(x_val), np.array(y_val)), word_index, num_classes, label_binarizer
+    return (np.array(x_train), np.array(y_train)), (np.array(x_val), np.array(y_val)), word_index, num_classes, label_binarizer, tokenizer
