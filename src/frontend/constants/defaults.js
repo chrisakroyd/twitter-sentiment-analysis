@@ -1,3 +1,5 @@
+import PropTypes from "prop-types";
+
 const tweets = [
   {
     tweetId: 620013074272137216,
@@ -143,22 +145,24 @@ const models = [
 const results = [
   {
     name: 'LSTM_Attention',
-    lastRun: '',
-    lastModified: '',
+    lastRun: '9:12:04 AM 09/05/2018',
+    lastModified: '11:22:45 PM 08/05/2018',
     runs: 12,
-    trainF1: 78.4,
-    valF1: 80.9,
-    trainAcc: 14.4,
-    valAcc: 14.4,
+    trainF1: 78.46,
+    valF1: 80.91,
+    trainAcc: 14.48,
+    valAcc: 14.42,
     trainLoss: 0.45,
     valLoss: 0.45,
-    trainConfMatrixSrc: '',
-    valConfMatrixSrc: '',
+    trainConfMatrixSrc: 'images/train_confusion_lstm_attention.png',
+    valConfMatrixSrc: 'images/val_confusion_lstm_attention.png',
     tokenizationScheme: 'TokenizerV2Annotate',
-    trainF1Improvement: -1.2,
-    trainAccImprovement: -0.23,
-    valF1Improvement: 0.64,
-    valAccImprovement: 0.28,
+    trainF1Change: -1.21,
+    trainAccChange: -0.23,
+    trainLossChange: -0.05,
+    valF1Change: 0.64,
+    valAccChange: 0.28,
+    valLossChange: 0.03,
   },
 ];
 
