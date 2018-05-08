@@ -32,22 +32,24 @@ class BiLSTMAttention(TextModel):
         bi_gru_1 = Bidirectional(CuDNNLSTM(RNN_UNITS,
                                            return_sequences=True,
                                            recurrent_regularizer=l2(L2_REG),
-                                           kernel_regularizer=l2(L2_REG)))(embedding)
+                                           kernel_regularizer=l2(L2_REG),
+                                           name="bi_gru_1"))(embedding)
 
-        bi_gru_1 = Dropout(0.3)(bi_gru_1)
+        bi_gru_1 = Dropout(0.3, name="bi_gru_1_dropout")(bi_gru_1)
 
         bi_gru_2 = Bidirectional(CuDNNLSTM(RNN_UNITS,
                                            return_sequences=True,
                                            recurrent_regularizer=l2(L2_REG),
-                                           kernel_regularizer=l2(L2_REG)))(bi_gru_1)
+                                           kernel_regularizer=l2(L2_REG),
+                                           name="bi_gru_2"))(bi_gru_1)
 
-        bi_gru_2 = Dropout(0.3)(bi_gru_2)
+        bi_gru_2 = Dropout(0.3, name="bi_gru_2_dropout")(bi_gru_2)
 
         attention = Attention()(bi_gru_2)
 
-        drop_1 = Dropout(0.5)(attention)
+        drop_1 = Dropout(0.5, name="attention_dropout")(attention)
 
-        outputs = Dense(self.num_classes, activation='softmax')(drop_1)
+        outputs = Dense(self.num_classes, activation='softmax', name="output")(drop_1)
 
         model = Model(inputs=rnn_input, outputs=outputs)
 

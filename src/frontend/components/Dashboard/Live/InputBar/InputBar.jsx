@@ -1,7 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-
 import './input-bar.scss';
 
 class SearchBar extends React.Component {
@@ -27,7 +26,6 @@ class SearchBar extends React.Component {
 
 SearchBar.propTypes = {
   onEnter: PropTypes.func.isRequired,
-  // searchTerms: PropTypes.arrayOf(PropTypes.string).isRequired,
   value: PropTypes.string.isRequired,
   onKeyPress: PropTypes.func.isRequired,
 };

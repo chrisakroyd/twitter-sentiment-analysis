@@ -42,7 +42,10 @@ class Dashboard extends React.Component {
             exact
             path="/data"
             render={() => (
-              <Data />
+              <Data
+                datasets={this.props.datasets.datasets}
+                embeddings={this.props.embeddings.embeddings}
+              />
             )}
           />
 
@@ -50,7 +53,7 @@ class Dashboard extends React.Component {
             exact
             path="/models"
             render={() => (
-              <Models />
+              <Models models={this.props.models.models} />
             )}
           />
 
@@ -66,7 +69,7 @@ class Dashboard extends React.Component {
             exact
             path="/results"
             render={() => (
-              <Results />
+              <Results results={this.props.results.results} />
             )}
           />
         </div>

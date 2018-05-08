@@ -25,7 +25,7 @@ def get_data_sent_140(path, dataset_size=DATASET_SIZE, shuffle=True):
     df['class'] = df['class'].replace({0: 'negative', 4: 'positive'})
     if shuffle:
         df = shuff(df)
-    df = df[:dataset_size]
+    # df = df[:dataset_size]
     print(df['class'].value_counts())
     return df
 
@@ -80,4 +80,4 @@ def load_data(path, data_set='sem_eval', max_features=5000,):
     x_train, x_val, y_train, y_val = train_test_split(X, y, test_size=0.2, stratify=y)
     num_classes = len(label_binarizer.classes_)
 
-    return (np.array(x_train), np.array(y_train)), (np.array(x_val), np.array(y_val)), word_index, num_classes
+    return (np.array(x_train), np.array(y_train)), (np.array(x_val), np.array(y_val)), word_index, num_classes, label_binarizer

@@ -9,11 +9,12 @@ class TextModel:
                               embed_dim,
                               weights=[embedding_matrix],
                               embeddings_regularizer=embeddings_regularizer,
-                              input_length=input_length)(tensor)
+                              input_length=input_length,
+                              name="embedding")(tensor)
 
-        spatial_dropout_1 = SpatialDropout1D(dropout)(embedding)
+        spatial_dropout_1 = SpatialDropout1D(dropout, name="spatial_dropout")(embedding)
 
-        noise = GaussianNoise(noise)(spatial_dropout_1)
+        noise = GaussianNoise(noise, name="noise")(spatial_dropout_1)
 
         return noise
 

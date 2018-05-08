@@ -2,19 +2,20 @@ import React from 'react';
 import * as d3 from 'd3';
 import { withFauxDOM } from 'react-faux-dom';
 
-import './donut-chart.scss';
+import './progress-chart.scss';
 import PropTypes from "prop-types";
 
-const w = 140;
-const h = 140;
+const width = 140;
+const height = 140;
+const animationDuration = 750;
 
-class DonutChart extends React.Component {
+class ProgressChart extends React.Component {
   componentDidMount() {
     const faux = this.props.connectFauxDOM('div', 'chart');
     const ratio = this.props.value / this.props.max;
     const innerRadius = 70;
 
-    const color = d3.scaleOrdinal().range(['#67BAF5', '#F17F4D']);
+    const color = d3.scaleOrdinal().range(['#67BAF5', '#3eb2e3']);
 
     const arcLine = d3.arc()
       .innerRadius(innerRadius - 13)
@@ -27,12 +28,13 @@ class DonutChart extends React.Component {
       .startAngle(0)
       .endAngle(2 * Math.PI);
 
-    const svg = d3.select(faux).append('svg')
-      .attr('width', w)
-      .attr('height', h)
+    const svg = d3.select(faux)
+      .append('svg')
+      .attr('width', width)
+      .attr('height', height)
       .attr('class', 'shadow')
       .append('g')
-      .attr('transform', `translate(${w / 2}, ${h / 2})`);
+      .attr('transform', `translate(${width / 2}, ${height / 2})`);
 
     const backgroundLine = svg.append('path')
       .attr('d', backgroundArc)
@@ -64,15 +66,15 @@ class DonutChart extends React.Component {
     };
 
     setTimeout(() => pathLine.transition()
-      .duration(750)
+      .duration(animationDuration)
       .call(arcTween, ((2 * Math.PI)) * ratio), 100);
 
-    this.props.animateFauxDOM(750);
+    this.props.animateFauxDOM(animationDuration);
   }
 
   render() {
     return (
-      <div className="donut-chart">
+      <div className="progress-chart">
         {this.props.chart}
         <p>{this.props.label}</p>
       </div>
@@ -80,11 +82,11 @@ class DonutChart extends React.Component {
   }
 }
 
-DonutChart.propTypes = {
+ProgressChart.propTypes = {
   label: PropTypes.string.isRequired,
   unit: PropTypes.string.isRequired,
   value: PropTypes.number.isRequired,
   max: PropTypes.number.isRequired,
 };
 
-export default withFauxDOM(DonutChart);
+export default withFauxDOM(ProgressChart);
