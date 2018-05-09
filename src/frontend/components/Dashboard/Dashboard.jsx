@@ -34,6 +34,7 @@ class Dashboard extends React.Component {
                 process={this.props.process}
                 setText={this.props.setText}
                 tweets={this.props.tweets}
+                loadNewTweets={this.props.tweetRefresh}
               />
             )}
           />
@@ -83,6 +84,7 @@ Dashboard.propTypes = {
   onDashClick: PropTypes.func.isRequired,
   process: PropTypes.func.isRequired,
   setText: PropTypes.func.isRequired,
+  tweetRefresh: PropTypes.func.isRequired,
   // Data
   activeView: PropTypes.string.isRequired,
   activeText: PropTypes.shape({}).isRequired,

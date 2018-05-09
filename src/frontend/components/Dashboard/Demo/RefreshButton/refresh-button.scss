@@ -1,0 +1,12 @@
+.refresh-button {
+  cursor: pointer;
+  height: 24px;
+  margin-bottom: -5px;
+  position: relative;
+  float: right;
+  transition: all .5s;
+
+  &:hover {
+    transform: rotate(-90deg);
+  }
+}

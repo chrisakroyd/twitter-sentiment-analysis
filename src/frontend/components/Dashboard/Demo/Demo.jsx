@@ -12,10 +12,11 @@ import WordHeat from './WordHeat/WordHeat';
 import ConfidenceGauge from './ConfidenceGauge/ConfidenceGauge';
 
 import Tweets from './Tweets/Tweets';
+import RefreshButton from './RefreshButton/RefreshButton';
 
 import tweetShape from '../../../prop-shapes/tweetShape';
 
-const Demo = ({ process, setText, status, activeText, tweets }) => {
+const Demo = ({ process, setText, loadNewTweets, status, activeText, tweets }) => {
   const connectionStatus = status.connected;
   const connectionWord = status.connected ? 'Connected' : 'Disconnected';
   const connectionClass = classNames({
@@ -111,8 +112,9 @@ const Demo = ({ process, setText, status, activeText, tweets }) => {
           </div>
 
           <div className="tile tweets-tile">
-            <div className="tile-header">
+            <div className="tile-header tweet-header">
               <h3>Tweets</h3>
+              <RefreshButton onRefresh={loadNewTweets} />
             </div>
             <div className="tile-body">
               <Tweets tweets={tweets.tweets} setText={setText} />
@@ -129,6 +131,7 @@ Demo.propTypes = {
   // Functions
   process: PropTypes.func.isRequired,
   setText: PropTypes.func.isRequired,
+  loadNewTweets: PropTypes.func.isRequired,
   // Data
   status: PropTypes.shape({
     memoryUsage: PropTypes.number.isRequired,

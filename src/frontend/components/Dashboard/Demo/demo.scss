@@ -32,13 +32,26 @@ $margin: 45px;
       .tweets-tile {
         margin-top: $margin;
         height: 500px;
+
+        .tile-header {
+          &.tweet-header {
+            h3 {
+              display: inline-block;
+              margin-top:0;
+            }
+
+            .refresh-button {
+              display: inline-block;
+            }
+          }
+        }
       }
     }
 
     .tile-row {
       .large-tile {
         width: calc(66% - 15px);
-        margin: 0 60px 0 60px;
+        margin: 0 40px 0 40px;
         height: 800px;
 
         .tile-body {

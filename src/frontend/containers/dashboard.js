@@ -3,7 +3,7 @@ import { push } from 'react-router-redux';
 import { withRouter } from 'react-router-dom';
 
 // Actions
-import { getPrediction } from '../actions/compositeActions';
+import { getPrediction, getTweets } from '../actions/compositeActions';
 import { changeDashView } from '../actions/dashboardActions';
 import { setInputText } from '../actions/textInputActions';
 import Dashboard from '../components/Dashboard/Dashboard';
@@ -26,6 +26,9 @@ const mapDispatchToProps = dispatch => ({
     console.log(newUrl);
     dispatch(changeDashView(type));
     dispatch(push(newUrl));
+  },
+  tweetRefresh: () => {
+    dispatch(getTweets());
   },
   process: () => {
     console.log('process');
