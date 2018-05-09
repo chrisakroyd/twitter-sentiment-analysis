@@ -6,7 +6,7 @@ export const SIDEBAR_TRAIN = 'TRAIN';
 export const SIDEBAR_RESULTS = 'RESULTS';
 
 // Label defs
-export const SIDEBAR_LIVE_LABEL = 'Live';
+export const SIDEBAR_LIVE_LABEL = 'Demo';
 export const SIDEBAR_DATA_LABEL = 'Data';
 export const SIDEBAR_MODELS_LABEL = 'Models';
 export const SIDEBAR_TRAIN_LABEL = 'Train';

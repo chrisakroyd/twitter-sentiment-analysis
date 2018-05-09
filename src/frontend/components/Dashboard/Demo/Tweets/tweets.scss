@@ -1,3 +1,9 @@
+$tweet-font-size: 16px;
+$tweet-margin: 10px;
+$tweet-adjusted-margin: 5px;
+$tweet-container-height: 380px;
+$tweet-icon-size: 52px;
+
 ::-webkit-scrollbar {
   width: 6px;
   border-radius: 25px;
@@ -13,12 +19,6 @@
   background-color: #9c9c9c;
   border-radius: 25px;
 }
-
-$tweet-font-size: 16px;
-$tweet-margin: 10px;
-$tweet-adjusted-margin: 5px;
-$tweet-container-height: 320px;
-$tweet-icon-size: 52px;
 
 .tweets-container {
   height: $tweet-container-height;

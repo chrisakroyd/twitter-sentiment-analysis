@@ -16,7 +16,7 @@ const defaultLimit = 10;
 
 router.get('/status', (req, res) => {
   gpuInfo().then((data) => {
-    console.log('GPUS:', data);
+    // console.log('GPUS:', data);
   });
 
   const generatedResponse = responseGenerator(req, {

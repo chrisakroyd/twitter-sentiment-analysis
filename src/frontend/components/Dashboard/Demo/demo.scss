@@ -1,10 +1,11 @@
 $margin: 45px;
 .live {
   &.dash-body {
+
     .tall-container {
       display: flex;
       flex-direction: column;
-      height: 750px;
+      height: 800px;
       width: calc(34% - 15px);
       margin: 0 $margin 0 $margin;
       margin-left: 0px;
@@ -38,7 +39,7 @@ $margin: 45px;
       .large-tile {
         width: calc(66% - 15px);
         margin: 0 60px 0 60px;
-        height: 750px;
+        height: 800px;
 
         .tile-body {
           flex-direction: column;
@@ -46,6 +47,16 @@ $margin: 45px;
 
           h4 {
             margin: 15px 0;
+            &:first-child {
+              margin-top: 0;
+            }
+          }
+
+
+
+          .enter-text-row {
+            display:flex;
+            flex-direction:row;
           }
 
           .colour-word {

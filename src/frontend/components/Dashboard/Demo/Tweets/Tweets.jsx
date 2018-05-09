@@ -23,7 +23,7 @@ class Tweets extends React.Component {
           </div>
           <div className="content-container">
             <div className="content-meta">
-              {`${tweet.username} - ${tweet.tweetId}`}
+              {`${tweet.username} - ${tweet.tweetId} - ${tweet.classification}`}
             </div>
             <div className="content-text">
               {tweet.text}

@@ -2,9 +2,10 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 
-import './live.scss';
+import './demo.scss';
 
 import InputBar from './InputBar/InputBar';
+import SearchButton from './SearchButton/SearchButton';
 import DonutChart from './ProgressChart/ProgressChart';
 import AnnotatedHighlight from './AnnotatedHighlight/AnnotatedHighlight';
 import WordHeat from './WordHeat/WordHeat';
@@ -14,7 +15,7 @@ import Tweets from './Tweets/Tweets';
 
 import tweetShape from '../../../prop-shapes/tweetShape';
 
-const Live = ({ process, setText, status, activeText, tweets }) => {
+const Demo = ({ process, setText, status, activeText, tweets }) => {
   const connectionStatus = status.connected;
   const connectionWord = status.connected ? 'Connected' : 'Disconnected';
   const connectionClass = classNames({
@@ -28,7 +29,7 @@ const Live = ({ process, setText, status, activeText, tweets }) => {
   return (
     <div className="live dash-body">
       <div className="body-header">
-        <h1>Live</h1>
+        <h1>Demo</h1>
       </div>
 
       <div className="tile-row">
@@ -38,11 +39,16 @@ const Live = ({ process, setText, status, activeText, tweets }) => {
           </div>
           <div className="tile-body">
             <h4>1. Enter Text</h4>
-            <InputBar
-              onEnter={process}
-              value={activeText.originalText}
-              onKeyPress={setText}
-            />
+            <div className="enter-text-row">
+              <InputBar
+                onEnter={process}
+                value={activeText.originalText}
+                onKeyPress={setText}
+              />
+              <div>
+                <SearchButton onEnter={process} />
+              </div>
+            </div>
             <div className="text-block">
               <h4>2. Processed Text</h4>
               <p>Before being run through the neural network, the text entered above is processed,
@@ -119,7 +125,7 @@ const Live = ({ process, setText, status, activeText, tweets }) => {
   );
 };
 
-Live.propTypes = {
+Demo.propTypes = {
   // Functions
   process: PropTypes.func.isRequired,
   setText: PropTypes.func.isRequired,
@@ -144,4 +150,4 @@ Live.propTypes = {
   }).isRequired,
 };
 
-export default Live;
+export default Demo;

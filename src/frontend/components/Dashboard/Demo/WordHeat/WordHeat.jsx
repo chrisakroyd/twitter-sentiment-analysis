@@ -21,7 +21,7 @@ class WordHeat extends React.Component {
         <li
           key={shortid.generate()}
           className="heat-word"
-          style={({ backgroundColor: interpolate(scores[i]) })}
+          style={({ backgroundColor: interpolate(scores[i] * 15) })}
         >
           {word}
         </li>));

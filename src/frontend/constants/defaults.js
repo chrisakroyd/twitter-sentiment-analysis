@@ -48,7 +48,7 @@ const datasets = [
   }, {
     name: 'Sent140',
     size: 1604006,
-    words: 473000,
+    words: 473507,
     bestModel: 'LSTM_Attention',
     bestF1Score: 86.2,
     statistics: [
@@ -150,8 +150,8 @@ const results = [
     valF1: 80.91,
     trainAcc: 14.48,
     valAcc: 14.42,
-    trainLoss: 0.45,
-    valLoss: 0.45,
+    trainLoss: 0.63,
+    valLoss: 0.68,
     trainConfMatrixSrc: 'images/train_confusion_lstm_attention.png',
     valConfMatrixSrc: 'images/val_confusion_lstm_attention.png',
     tokenizationScheme: 'TokenizerV2Annotate',

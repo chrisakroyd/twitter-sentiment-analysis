@@ -4,7 +4,7 @@ import { Route } from 'react-router';
 
 import Sidebar from '../../components/Dashboard/Sidebar/Sidebar';
 
-import Live from '../../components/Dashboard/Live/Live';
+import Demo from './Demo/Demo';
 import Data from '../../components/Dashboard/Data/Data';
 import Models from '../../components/Dashboard/Models/Models';
 import Train from '../../components/Dashboard/Train/Train';
@@ -28,7 +28,7 @@ class Dashboard extends React.Component {
             exact
             path="/"
             render={() => (
-              <Live
+              <Demo
                 status={this.props.status}
                 activeText={this.props.activeText}
                 process={this.props.process}
@@ -84,7 +84,6 @@ Dashboard.propTypes = {
   process: PropTypes.func.isRequired,
   setText: PropTypes.func.isRequired,
   // Data
-  loading: PropTypes.bool.isRequired,
   activeView: PropTypes.string.isRequired,
   activeText: PropTypes.shape({}).isRequired,
   embeddings: PropTypes.shape({}).isRequired,

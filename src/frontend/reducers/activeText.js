@@ -14,12 +14,12 @@ const search = (state = {}, action) => {
       };
     case NEURAL_SUCCESS:
       return {
-        originalText: action.text,
-        text: action.text,
-        processed: action.processed,
-        attentionWeights: action.attentionWeights,
-        classification: action.classification,
-        confidence: action.confidence,
+        originalText: action.data[0].text,
+        text: action.data[0].text,
+        processed: action.data[0].processed,
+        attentionWeights: action.data[0].attentionWeights,
+        classification: action.data[0].classification,
+        confidence: action.data[0].confidence,
         loading: false,
       };
     case NEURAL_FAILURE:

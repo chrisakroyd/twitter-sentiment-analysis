@@ -1,5 +1,21 @@
 import { TWEETS, TWEETS_SUCCESS, TWEETS_FAILURE } from '../constants/actions';
 
+function preprocessTweets(rawTweets) {
+  let tweets = [];
+  if ('class' in rawTweets) {
+    const ids = Object.keys(rawTweets.class);
+    const text = rawTweets.text;
+    const classes = rawTweets.class;
+    tweets = ids.map(id => ({
+      tweetId: id,
+      username: 'UNKNWN',
+      text: text[id],
+      classification: classes[id],
+    }));
+  }
+  return tweets;
+}
+
 const tweets = (state = {}, action) => {
   switch (action.type) {
     case TWEETS:
@@ -9,7 +25,7 @@ const tweets = (state = {}, action) => {
       };
     case TWEETS_SUCCESS:
       return {
-        tweets: action.tweets,
+        tweets: preprocessTweets(action.tweets),
         loading: false,
       };
     case TWEETS_FAILURE:
