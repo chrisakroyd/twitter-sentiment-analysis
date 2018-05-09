@@ -32,8 +32,11 @@ from keras.models import Model
 from keras.preprocessing.sequence import pad_sequences
 
 from flask import Flask, json, request
+from flask_cors import CORS, cross_origin
 
 app = Flask(__name__)
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 MAX_FEATS = 150000
 
@@ -111,15 +114,10 @@ model.compile(loss='categorical_crossentropy', optimizer=RMSprop(lr=LEARN_RATE, 
 model.load_weights('./model_checkpoints/BiLSTMAttention/BiLSTMAttention.hdf5')
 
 val_predictions = model.predict(x=x_val)
-# val_classes = lb.inverse_transform(val_predictions)
-# confidence = val_predictions.argmax(axis=-1)
-#
-# print(val_predictions[0])
-# print(val_classes[0])
-# print(val_predictions[0][confidence[0]])
 
 
 def predict(text):
+    origText = text
     processed = preprocessor.preprocess(text)
     # Number of cells used by this input
     rel_cells = (SEQUENCE_LENGTH - len(processed.split()))
@@ -130,14 +128,16 @@ def predict(text):
     attn_weights = weights[0][rel_cells:]
 
     return {
+        "originalText": origText,
         "processed": processed,
         "classification": pred_class,
         "confidence": float(confidence),
-        "attention_weights": attn_weights.tolist(),
+        "attentionWeights": attn_weights.tolist(),
     }
 
 
 @app.route('/status', methods=['GET'])
+@cross_origin()
 def status():
     test = json.dumps([{
         'connected': True
@@ -146,6 +146,7 @@ def status():
 
 
 @app.route('/tweets/train/sample', methods=['GET'])
+@cross_origin()
 def tweet_sample():
     sample = sem_eval.sample(n=10)
     test = sample.to_json()
@@ -153,6 +154,7 @@ def tweet_sample():
 
 
 @app.route('/tweets/process', methods=['POST'])
+@cross_origin()
 def process():
     data = request.get_json()
 
