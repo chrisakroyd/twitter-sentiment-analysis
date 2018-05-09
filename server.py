@@ -19,7 +19,7 @@ if module_path not in sys.path:
     sys.path.append(module_path)
 
 # Utility code.
-from src.neural_backend.load_data import load_data
+from src.neural_backend.load_data import load_data, get_data_sem_eval
 from src.neural_backend.load_embeddings import load_embeddings
 from src.neural_backend.layers.Attention import FeedForwardAttention as Attention
 from src.neural_backend.metrics import f1, precision, recall
@@ -53,6 +53,8 @@ L2_REG = 0.0001
 SEQUENCE_LENGTH = 40
 
 preprocessor = TextPreProcessor()
+
+sem_eval = get_data_sem_eval(sem_eval_path)
 
 (x_train, y_train), (x_val, y_val), word_index, num_classes, lb, tokenizer = load_data(path=sem_eval_path,
                                                            data_set='sem_eval',
@@ -101,6 +103,7 @@ drop_1 = Dropout(0.5, name="attention_dropout")(attention)
 
 outputs = Dense(num_classes, activation='softmax', name="output")(drop_1)
 
+global model
 model = Model(inputs=rnn_input, outputs=[outputs, weights])
 
 model.compile(loss='categorical_crossentropy', optimizer=RMSprop(lr=LEARN_RATE, clipnorm=CLIP_NORM), metrics=[precision, recall, f1])
@@ -108,12 +111,30 @@ model.compile(loss='categorical_crossentropy', optimizer=RMSprop(lr=LEARN_RATE, 
 model.load_weights('./model_checkpoints/BiLSTMAttention/BiLSTMAttention.hdf5')
 
 val_predictions = model.predict(x=x_val)
-val_classes = lb.inverse_transform(val_predictions)
-confidence = val_predictions.argmax(axis=-1)
+# val_classes = lb.inverse_transform(val_predictions)
+# confidence = val_predictions.argmax(axis=-1)
+#
+# print(val_predictions[0])
+# print(val_classes[0])
+# print(val_predictions[0][confidence[0]])
 
-print(val_predictions[0])
-print(val_classes[0])
-print(val_predictions[0][confidence[0]])
+
+def predict(text):
+    processed = preprocessor.preprocess(text)
+    # Number of cells used by this input
+    rel_cells = (SEQUENCE_LENGTH - len(processed.split()))
+    text = pad_sequences(tokenizer.texts_to_sequences([processed]), maxlen=SEQUENCE_LENGTH)
+    prediction, weights = model.predict(x=text)
+    pred_class = lb.inverse_transform(prediction)[0]
+    confidence = prediction[0][prediction.argmax(axis=-1)][0]
+    attn_weights = weights[0][rel_cells:]
+
+    return {
+        "processed": processed,
+        "classification": pred_class,
+        "confidence": float(confidence),
+        "attention_weights": attn_weights.tolist(),
+    }
 
 
 @app.route('/status', methods=['GET'])
@@ -124,23 +145,16 @@ def status():
     return test
 
 
-@app.route('/tweet/process', methods=['POST'])
+@app.route('/tweets/train/sample', methods=['GET'])
+def tweet_sample():
+    sample = sem_eval.sample(n=10)
+    test = sample.to_json()
+    return test
+
+
+@app.route('/tweets/process', methods=['POST'])
 def process():
     data = request.get_json()
-    processed = preprocessor.preprocess(data['text'])
-    # Number of cells used by this input
-    rel_cells = (SEQUENCE_LENGTH - len(processed.split()))
-    text = pad_sequences(tokenizer.texts_to_sequences([processed]), maxlen=SEQUENCE_LENGTH)
 
-    prediction, weights = model.predict(x=text)
-    pred_class = lb.inverse_transform(prediction)[0]
-    confidence = prediction[0][prediction.argmax(axis=-1)][0]
-    attn_weights = weights[0][rel_cells:]
-
-    return json.dumps([{
-        "processed": processed,
-        "classification": pred_class,
-        "confidence": confidence,
-        "attention_weights": attn_weights,
-    }])
-
+    respon = predict(data['text'])
+    return json.dumps([respon])

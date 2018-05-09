@@ -47,7 +47,7 @@ embed_type = 'GLOVE'
 #                                                            data_set='sem_eval',
 #                                                            max_features=MAX_FEATS)
 #
-(x_train, y_train), (x_val, y_val), word_index, num_classes, lb = load_data(path=sem_eval_path,
+(x_train, y_train), (x_val, y_val), word_index, num_classes, lb, tokenizer = load_data(path=sem_eval_path,
                                                            data_set='sem_eval',
                                                            max_features=MAX_FEATS)
 # #
