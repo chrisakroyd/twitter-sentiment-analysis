@@ -5,15 +5,15 @@ import { withFauxDOM } from 'react-faux-dom';
 import './progress-chart.scss';
 import PropTypes from "prop-types";
 
-const width = 140;
-const height = 140;
+const width = 130;
+const height = 130;
 const animationDuration = 750;
 
 class ProgressChart extends React.Component {
   componentDidMount() {
     const faux = this.props.connectFauxDOM('div', 'chart');
     const ratio = this.props.value / this.props.max;
-    const innerRadius = 70;
+    const innerRadius = 65;
 
     const color = d3.scaleOrdinal().range(['#67BAF5', '#3eb2e3']);
 
