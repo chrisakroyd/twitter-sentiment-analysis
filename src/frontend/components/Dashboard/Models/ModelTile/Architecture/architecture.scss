@@ -1,0 +1,111 @@
+.architecture {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-content: center;
+
+  p {
+    text-align: center;
+    margin-bottom: 0;
+  }
+
+  .down-arrow {
+    transform: rotate(90deg) translateX(5px);
+    width: 24px;
+    height: 24px;
+    margin: 0 auto;
+    margin-bottom: 10px;
+  }
+
+  .arch-block {
+    margin: 0 auto;
+    border: 1px solid black;
+    text-align: center;
+    height: 22px;
+  }
+
+  .embedding {
+    width: 200px;
+  }
+
+  .attention, .conc-pool {
+    width: 300px;
+  }
+
+  .conc-pool-container {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .vec-container {
+    display: flex;
+    flex-direction: row;
+    .vec-block {
+      width: 55px;
+    }
+
+    .top-k {
+      width: 100px;
+    }
+  }
+
+  .rnn-layers {
+    flex-direction: column;
+    display: flex;
+    .rnn-layer {
+      width: 150px;
+      display: flex;
+      flex-direction: column;
+      margin: 0 auto;
+
+      .forward, .backward {
+        height: 22px;
+        width: 150px;
+      }
+
+      .backward {
+        border-top: 0;
+      }
+    }
+
+    .concat {
+      width: 300px;
+      display:flex;
+      flex-direction: row;
+      .concat-block {
+        width: 150px;
+        &:first-child {
+          border-right: 1px solid black;
+        }
+      }
+    }
+  }
+
+  .connected, .positive {
+    background-color: #46cea6;
+  }
+
+  .negative {
+    background-color: #f65177;
+  }
+
+  .neutral {
+    background-color: #ababab;
+  }
+
+  .output {
+    display: flex;
+    flex-direction: row;
+    width: 93px;
+    margin: 0 auto;
+
+    .out-cell {
+      width: 30px;
+      border-right: 0;
+
+      &:last-child {
+        border-right: 1px solid black;
+      }
+    }
+  }
+}

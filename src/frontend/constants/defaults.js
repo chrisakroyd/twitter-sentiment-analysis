@@ -1,5 +1,3 @@
-import PropTypes from "prop-types";
-
 const tweets = [
   {
     tweetId: 620013074272137216,
