@@ -2,7 +2,8 @@ from keras.layers import Input, Dense, Bidirectional, Dropout, CuDNNLSTM
 from keras.regularizers import l2
 from keras.optimizers import RMSprop
 from keras.models import Model
-from ..layers.Attention import FeedForwardAttention as Attention
+from ..layers.Attention import Attention
+
 from metrics import f1, precision, recall
 from models.TextModel import TextModel
 
@@ -12,7 +13,7 @@ EPOCHS = 50
 LEARN_RATE = 0.001
 CLIP_NORM = 5.0
 NUM_CLASSES = 12
-RNN_UNITS = 150
+RNN_UNITS = 200
 L2_REG = 0.0001
 
 
@@ -60,7 +61,7 @@ class BiLSTMAttention(TextModel):
 
         model.compile(loss='categorical_crossentropy', optimizer=RMSprop(lr=self.LEARN_RATE, clipnorm=CLIP_NORM),
         # model.compile(loss='categorical_crossentropy', optimizer=RMSprop(lr=self.LEARN_RATE),
-                      metrics=[precision, recall, f1])
+                      metrics=[precision, recall, f1, 'accuracy'])
 
         if summary:
             model.summary()

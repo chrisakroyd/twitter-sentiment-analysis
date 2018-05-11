@@ -2,7 +2,7 @@ from keras.layers import Input, Dense, Bidirectional, Dropout, concatenate, Spat
 from keras.regularizers import l2
 from keras.optimizers import RMSprop
 from keras.models import Model
-from ..layers.Attention import FeedForwardAttention as Attention
+from ..layers.Attention import Attention
 from metrics import f1
 from models.TextModel import TextModel
 

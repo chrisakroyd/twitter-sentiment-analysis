@@ -5,7 +5,7 @@ from .attention_utils import dot_product
 
 
 # http://colinraffel.com/publications/iclr2016feed.pdf
-class FeedForwardAttention(Layer):
+class Attention(Layer):
     def __init__(self, kernel_regularizer=None, bias_regularizer=None,
                  kernel_constraint=None, bias_constraint=None,
                  use_bias=True, return_attention=False, **kwargs):
@@ -21,7 +21,7 @@ class FeedForwardAttention(Layer):
 
         self.use_bias = use_bias
         self.return_attention = return_attention
-        super(FeedForwardAttention, self).__init__(**kwargs)
+        super(Attention, self).__init__(**kwargs)
 
     def build(self, input_shape):
         assert len(input_shape) == 3

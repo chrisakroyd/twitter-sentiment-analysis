@@ -21,7 +21,7 @@ if module_path not in sys.path:
 # Utility code.
 from src.neural_backend.load_data import load_data, get_data_sem_eval
 from src.neural_backend.load_embeddings import load_embeddings
-from src.neural_backend.layers.Attention import FeedForwardAttention as Attention
+from src.neural_backend.layers.Attention import Attention as Attention
 from src.neural_backend.metrics import f1, precision, recall
 from src.neural_backend.preprocessor import TextPreProcessor
 

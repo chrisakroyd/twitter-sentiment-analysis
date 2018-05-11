@@ -4,7 +4,7 @@ from keras.optimizers import RMSprop
 from keras.models import Model
 from keras.backend import sum
 
-from ..layers.Attention import FeedForwardAttention as Attention
+from ..layers.Attention import Attention as Attention
 from metrics import f1
 from models.TextModel import TextModel
 

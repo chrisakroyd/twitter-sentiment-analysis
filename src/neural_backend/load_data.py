@@ -21,18 +21,16 @@ SEQUENCE_LENGTH = 40
 
 
 def get_data_sent_140(path, dataset_size=DATASET_SIZE, shuffle=True):
-    df = pd.read_csv(path, names=['class', 'id', 'date', 'query', 'user', 'text'], encoding='latin-1')
+    df = pd.read_csv(path, names=['class', 'id', 'date', 'query', 'user', 'text'], encoding='latin-1', index_col=1)
     df['class'] = df['class'].replace({0: 'negative', 4: 'positive'})
     if shuffle:
         df = shuff(df)
-    # df = df[:dataset_size]
-    print(df['class'].value_counts())
+    df = df[:dataset_size]
     return df
 
 
 def get_data_sem_eval(data_dir):
     df = concat_load_tsvs(data_dir)
-    print(df['class'].value_counts())
     return df
 
 
@@ -54,13 +52,16 @@ def pre_process(df):
     return new_df
 
 
-def load_data(path, data_set='sem_eval', max_features=5000,):
-    if data_set == 'sem_eval':
+def load_data(path, dataset_type=None, max_features=5000, print_classes=True):
+    if dataset_type == 'sem_eval':
         df = get_data_sem_eval(path)
-    elif data_set == 'sent_140':
+    elif dataset_type == 'sent_140':
         df = get_data_sent_140(path)
     else:
-        print('INVALID DATA GENERATOR SPECIFIED')
+        df = pd.read_csv(path, index_col=0)
+
+    if print_classes:
+        print(df['class'].value_counts())
 
     data_set = pre_process(df)
 
