@@ -42,6 +42,7 @@ MAX_FEATS = 150000
 
 # Paths to data sets
 sem_eval_path = './data/sem_eval/full/'
+custom = './data/custom/sem_eval_balanced_with_sent_140.csv'
 # Paths to glove embeddings.
 glove_path = './data/embeddings/glove.twitter.27B.200d.txt'
 embed_dims = 200
@@ -51,7 +52,7 @@ EPOCHS = 50
 LEARN_RATE = 0.001
 CLIP_NORM = 5.0
 NUM_CLASSES = 12
-RNN_UNITS = 150
+RNN_UNITS = 200
 L2_REG = 0.0001
 SEQUENCE_LENGTH = 40
 
@@ -59,9 +60,12 @@ preprocessor = TextPreProcessor()
 
 sem_eval = get_data_sem_eval(sem_eval_path)
 
-(x_train, y_train), (x_val, y_val), word_index, num_classes, lb, tokenizer = load_data(path=sem_eval_path,
-                                                           data_set='sem_eval',
-                                                           max_features=MAX_FEATS)
+# (x_train, y_train), (x_val, y_val), word_index, num_classes, lb, tokenizer = load_data(path=sem_eval_path,
+#                                                                                        data_type='sem_eval',
+#                                                                                        max_features=MAX_FEATS)
+
+(x_train, y_train), (x_val, y_val), word_index, num_classes, lb, tokenizer = load_data(path=custom, max_features=MAX_FEATS)
+
 embedding_matrix = load_embeddings(path=glove_path,
                                    embedding_type=embed_type,
                                    word_index=word_index,

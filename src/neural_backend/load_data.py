@@ -52,10 +52,10 @@ def pre_process(df):
     return new_df
 
 
-def load_data(path, dataset_type=None, max_features=5000, print_classes=True):
-    if dataset_type == 'sem_eval':
+def load_data(path, data_type=None, max_features=5000, print_classes=True):
+    if data_type == 'sem_eval':
         df = get_data_sem_eval(path)
-    elif dataset_type == 'sent_140':
+    elif data_type == 'sent_140':
         df = get_data_sent_140(path)
     else:
         df = pd.read_csv(path, index_col=0)

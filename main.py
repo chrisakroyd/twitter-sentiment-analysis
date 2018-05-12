@@ -18,7 +18,7 @@ print(module_path)
 if module_path not in sys.path:
     sys.path.append(module_path)
 
-from keras.callbacks import ModelCheckpoint, EarlyStopping
+from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
 # Utility code.
 from src.neural_backend.load_data import load_data
 from src.neural_backend.load_embeddings import load_embeddings, load_afinn_matrix
@@ -26,6 +26,7 @@ from src.neural_backend.preprocessor import create_polarity_dict
 from src.neural_backend.util import get_save_path
 # Models
 from src.neural_backend.models.lstm_attention import BiLSTMAttention
+from src.neural_backend.models.lstm_deep_attention import BiLSTMAttention
 from src.neural_backend.models.lstm_attention_skip import BiLSTMAttentionSkip
 from src.neural_backend.models.lstm_conc_pool import BiLSTMConcPool
 
@@ -90,12 +91,14 @@ if TRAIN:
                                verbose=1,
                                min_delta=0.00001)
 
+    logging = TensorBoard(log_dir='./logs')
+
     model.fit(x=x_train,
               y=y_train,
               validation_data=(x_val, y_val),
               epochs=model_instance.EPOCHS,
               batch_size=model_instance.BATCH_SIZE,
-              callbacks=[checkpoint, early_stop])
+              callbacks=[checkpoint, early_stop, logging])
 
 elif PRODUCTION:
     model = get_save_path(model_instance)
