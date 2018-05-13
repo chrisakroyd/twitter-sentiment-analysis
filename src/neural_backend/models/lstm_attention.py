@@ -8,10 +8,10 @@ from metrics import f1, precision, recall
 from models.TextModel import TextModel
 
 # HPARAMs
-BATCH_SIZE = 128
+BATCH_SIZE = 64
 EPOCHS = 50
 LEARN_RATE = 0.001
-CLIP_NORM = 5.0
+CLIP_NORM = 1.0
 NUM_CLASSES = 12
 RNN_UNITS = 200
 L2_REG = 0.0001

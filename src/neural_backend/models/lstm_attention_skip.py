@@ -1,4 +1,4 @@
-from keras.layers import Input, Dense, Bidirectional, Dropout, concatenate, SpatialDropout1D, CuDNNLSTM
+from keras.layers import Input, Dense, Bidirectional, Dropout, concatenate, CuDNNLSTM
 from keras.regularizers import l2
 from keras.optimizers import RMSprop
 from keras.models import Model
@@ -7,12 +7,12 @@ from metrics import f1
 from models.TextModel import TextModel
 
 # HPARAMs
-BATCH_SIZE = 128
+BATCH_SIZE = 64
 EPOCHS = 50
 LEARN_RATE = 0.001
 CLIP_NORM = 5.0
 NUM_CLASSES = 12
-RNN_UNITS = 150
+RNN_UNITS = 200
 L2_REG = 0.0001
 
 
@@ -34,14 +34,14 @@ class BiLSTMAttentionSkip(TextModel):
                                            recurrent_regularizer=l2(L2_REG),
                                            kernel_regularizer=l2(L2_REG)))(embedding)
 
-        bi_gru_1 = SpatialDropout1D(0.3)(bi_gru_1)
+        bi_gru_1 = Dropout(0.3)(bi_gru_1)
 
         bi_gru_2 = Bidirectional(CuDNNLSTM(RNN_UNITS,
                                            return_sequences=True,
                                            recurrent_regularizer=l2(L2_REG),
                                            kernel_regularizer=l2(L2_REG)))(bi_gru_1)
 
-        bi_gru_2 = SpatialDropout1D(0.3)(bi_gru_2)
+        bi_gru_2 = Dropout(0.3)(bi_gru_2)
 
         skip_connection = concatenate([bi_gru_2, bi_gru_1, embedding])
 
