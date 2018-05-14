@@ -38,7 +38,6 @@ sent_140_path = './data/sent_140/training.1600000.processed.noemoticon.csv'
 sem_eval_path = './data/sem_eval/full/'
 sem_eval_2017_path = './data/sem_eval/2017_dataset/'
 custom = './data/custom/sem_eval_balanced_with_sent_140.csv'
-# custom = './data/custom/sem_eval_sanders_balanced.csv'
 
 # Paths to glove embeddings.
 glove_path = './data/embeddings/glove.twitter.27B.200d.txt'
@@ -49,7 +48,7 @@ embed_type = 'GLOVE'
 # (x_train, y_train), (x_val, y_val), word_index, num_classes, lb, tokenizer = load_data(path=sem_eval_2017_path,
 #                                                            data_type='sem_eval',
 #                                                            max_features=MAX_FEATS)
-#
+
 (x_train, y_train), (x_val, y_val), word_index, num_classes, lb, tokenizer = load_data(path=sem_eval_path,
                                                                                        data_type='sem_eval',
                                                                                        max_features=MAX_FEATS)

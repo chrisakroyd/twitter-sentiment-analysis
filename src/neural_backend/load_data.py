@@ -17,7 +17,7 @@ from .preprocessor import TextPreProcessor
 RANDOM_SEED = 59185
 CONTROL_BALANCE = True
 DATASET_SIZE = 1200000
-SEQUENCE_LENGTH = 40
+SEQUENCE_LENGTH =  40
 
 
 def get_data_sent_140(path, dataset_size=DATASET_SIZE, shuffle=True):

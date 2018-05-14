@@ -9,6 +9,7 @@ def add_custom_embeddings(embedding_index):
     # Add a vector for my custom tags - at least until own embeddings are trained.
     embedding_index['<ip>'] = np.full((dimension,), 0.155)
     embedding_index['<date>'] = np.full((dimension, ), 0.145)
+    embedding_index['<time>'] = np.full((dimension, ), 0.140)
     embedding_index['<percent>'] = np.full((dimension,), 0.135)
     embedding_index['<score>'] = np.full((dimension,), 0.115)
     embedding_index['<currency>'] = np.full((dimension,), 0.105)

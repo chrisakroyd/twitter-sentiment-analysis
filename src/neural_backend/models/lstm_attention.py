@@ -8,7 +8,7 @@ from metrics import f1, precision, recall
 from models.TextModel import TextModel
 
 # HPARAMs
-BATCH_SIZE = 64
+BATCH_SIZE = 128
 EPOCHS = 50
 LEARN_RATE = 0.001
 CLIP_NORM = 1.0
@@ -27,8 +27,10 @@ class BiLSTMAttention(TextModel):
     def create_model(self, vocab_size, embedding_matrix, input_length=5000, embed_dim=200):
         rnn_input = Input(shape=(input_length,))
         embedding = self.embedding_layers(rnn_input, vocab_size, embedding_matrix,
-                                          dropout=0.3, noise=0.2,
-                                          input_length=input_length, embed_dim=embed_dim)
+                                          dropout=0.3,
+                                          noise=0.2,
+                                          input_length=input_length,
+                                          embed_dim=embed_dim)
 
         bi_gru_1 = Bidirectional(CuDNNLSTM(RNN_UNITS,
                                            return_sequences=True,
@@ -36,7 +38,7 @@ class BiLSTMAttention(TextModel):
                                            kernel_regularizer=l2(L2_REG),
                                            name="bi_gru_1"))(embedding)
 
-        bi_gru_1 = Dropout(0.3, name="bi_gru_1_dropout")(bi_gru_1)
+        bi_gru_1 = Dropout(0.5, name="bi_gru_1_dropout")(bi_gru_1)
 
         bi_gru_2 = Bidirectional(CuDNNLSTM(RNN_UNITS,
                                            return_sequences=True,
@@ -44,11 +46,12 @@ class BiLSTMAttention(TextModel):
                                            kernel_regularizer=l2(L2_REG),
                                            name="bi_gru_2"))(bi_gru_1)
 
-        bi_gru_2 = Dropout(0.3, name="bi_gru_2_dropout")(bi_gru_2)
+        bi_gru_2 = Dropout(0.5, name="bi_gru_2_dropout")(bi_gru_2)
 
-        attention = Attention()(bi_gru_2)
+        attention = Attention(kernel_regularizer=l2(0.00001),
+                              bias_regularizer=l2(0.00001),)(bi_gru_2)
 
-        drop_1 = Dropout(0.5, name="attention_dropout")(attention)
+        drop_1 = Dropout(0.3, name="attention_dropout")(attention)
 
         outputs = Dense(self.num_classes, activation='softmax', name="output")(drop_1)
 
@@ -59,8 +62,8 @@ class BiLSTMAttention(TextModel):
     def build(self, vocab_size, embedding_matrix, afinn_matrix, input_length=5000, embed_dim=200, summary=True):
         model = self.create_model(vocab_size, embedding_matrix, input_length, embed_dim)
 
+        # model.compile(loss='categorical_crossentropy', optimizer=Adam(lr=self.LEARN_RATE, clipnorm=CLIP_NORM),
         model.compile(loss='categorical_crossentropy', optimizer=RMSprop(lr=self.LEARN_RATE, clipnorm=CLIP_NORM),
-        # model.compile(loss='categorical_crossentropy', optimizer=RMSprop(lr=self.LEARN_RATE),
                       metrics=[precision, recall, f1, 'accuracy'])
 
         if summary:

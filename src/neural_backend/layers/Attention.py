@@ -4,43 +4,50 @@ from keras import constraints, initializers, regularizers
 from .attention_utils import dot_product
 
 
-# http://colinraffel.com/publications/iclr2016feed.pdf
 class Attention(Layer):
-    def __init__(self, kernel_regularizer=None, bias_regularizer=None,
-                 kernel_constraint=None, bias_constraint=None,
-                 use_bias=True, return_attention=False, **kwargs):
-
+    def __init__(self,
+                 kernel_initializer='glorot_uniform',
+                 bias_initializer='zeros',
+                 kernel_regularizer=None,
+                 bias_regularizer=None,
+                 kernel_constraint=None,
+                 bias_constraint=None,
+                 use_bias=True,
+                 return_attention=False,
+                 **kwargs):
+        super(Attention, self).__init__(**kwargs)
         self.supports_masking = True
-        self.init = initializers.get('glorot_uniform')
-
+        # Weights/bias initializers e.g. glorut, zeros
+        self.kernel_initializer = initializers.get(kernel_initializer)
+        self.bias_initializer = initializers.get(bias_initializer)
+        # Regularization support.
         self.kernel_regularizer = regularizers.get(kernel_regularizer)
         self.bias_regularizer = regularizers.get(bias_regularizer)
-
+        # Any constraints
         self.kernel_constraint = constraints.get(kernel_constraint)
         self.bias_constraint = constraints.get(bias_constraint)
 
         self.use_bias = use_bias
         self.return_attention = return_attention
-        super(Attention, self).__init__(**kwargs)
 
     def build(self, input_shape):
         assert len(input_shape) == 3
 
-        self.kernel = self.add_weight((input_shape[-1], 1),
-                                      initializer=self.init,
+        self.kernel = self.add_weight(shape=(input_shape[-1], 1),
+                                      initializer=self.kernel_initializer,
                                       name='{}_W'.format(self.name),
                                       regularizer=self.kernel_regularizer,
-                                      constraint=self.kernel_constraint)
+                                      constraint=self.kernel_constraint,
+                                      trainable=True)
         if self.use_bias:
-            self.bias = self.add_weight((input_shape[1],),
-                                        initializer='zero',
+            self.bias = self.add_weight(shape=(input_shape[1],),
+                                        initializer=self.bias_initializer,
                                         name='{}_b'.format(self.name),
                                         regularizer=self.bias_regularizer,
                                         constraint=self.bias_constraint)
         else:
             self.bias = None
 
-        self.trainable_weights = [self.kernel]
         self.built = True
 
     def compute_mask(self, input, input_mask=None):
@@ -82,4 +89,3 @@ class Attention(Layer):
         if self.return_attention:
             return [(input_shape[0], input_shape[-1]), (input_shape[0], input_shape[1])]
         return input_shape[0], input_shape[-1]
-        # return input_shape[0], input_shape[-1]

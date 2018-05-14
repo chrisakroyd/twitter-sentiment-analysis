@@ -3,6 +3,9 @@ from ftfy import fix_text
 from unidecode import unidecode
 from afinn import Afinn
 from collections import Counter
+from wordsegment import load, segment
+
+load()
 
 FLAGS = re.MULTILINE | re.DOTALL
 
@@ -14,7 +17,6 @@ REGEX_LOOKUP = {
     "TIME": "(?:(?:\d+)?\.?\d+(?:AM|PM|am|pm|a\.m\.|p\.m\.))|(?:(?:[0-2]?[0-9]|[2][0-3]):(?:[0-5][0-9])(?::(?:[0-5][0-9]))?(?: ?(?:AM|PM|am|pm|a\.m\.|p\.m\.))?)",
     "MONEY": "(?:[$€£¢]\d+(?:[\.,']\d+)?(?:[MmKkBb](?:n|(?:il(?:lion)?))?)?)|(?:\d+(?:[\.,']\d+)?[$€£¢])",
     "URL": "http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
-    #     "NUMBERS": "[-+]?[.\d]*[\d]+[:,.\d]*",
     "NUMBERS": "[-+]?([\d]+[.\d]*)",
     "PERCENT": "[-+]?([\d]+[.\d]*)\s{0,1}%",
     "SCORES": "\d+\s{0,1}-\s{0,1}\d+"
@@ -33,29 +35,44 @@ percent_regex = re.compile(REGEX_LOOKUP['PERCENT'])
 scores_regex = re.compile(REGEX_LOOKUP['SCORES'])
 
 control_chars = re.compile('[\n\t\r\v\f\0]')
-
 parenthesis_regex = re.compile('([\[\]()])')
 hearts_regex = re.compile(r'(♥)|(<3{1,})')
 users_regex = re.compile("@\w+")
 tokenize_punct = re.compile(r'([.,?!"]{1})')
 repeated_punct = re.compile('([!?.]){2,}')
 elongated_words = re.compile(r"\b(\S*?)(.)\2{2,}\b")
-word_split = re.compile(r'[/\-_\\]')
+
+word_split = re.compile(r'[/\-_\\/]')
 all_caps_regex = re.compile(r'([A-Z]){2,}')
-emphasis_regex = re.compile('(\*)(?:\w+ ?){1,}(\*)')
+
 hashtag_regex = re.compile("#\S+")
 mentions_regex = re.compile('(?<=^|(?<=[^a-zA-Z0-9-_.]))@([A-Za-z_]+[A-Za-z0-9_]+)')
 
 hashtag_splitter_regex = re.compile(r'((?<=[a-z])[A-Z]|[A-Z](?=[a-z]))')
 # seperates things like the'
-seperate_apostrophes = re.compile("(\w+)('\w*)")
+seperate_apostrophes = re.compile("(([A-zA-Z]){3,})(')")
 # seperates things like 'the
 seperate_errant_apostrophes = re.compile("(')(([A-zA-Z]){3,})")
+arrows = re.compile("[<>]")
 
 
 def allcaps(text):
     text = text.group()
     return text.lower() + " <allcaps> "
+
+
+def hashtag(text):
+    text = text.group()
+    hashtag_body = text[1:]
+    is_uppercase = hashtag_body.isupper()
+    hashtag_body = ' '.join(segment(hashtag_body))
+
+    if is_uppercase:
+        result = " <hashtag> {} <allcaps> </hashtag>".format(hashtag_body)
+    else:
+        hashtag_body = hashtag_splitter_regex.sub(r' \1', hashtag_body)
+        result = " ".join([" <hashtag>"] + hashtag_body.split(r"(?=[A-Z])") + ["</hashtag> "])
+    return result
 
 
 class TextPreProcessor:
@@ -64,7 +81,7 @@ class TextPreProcessor:
 
     def preprocess(self, string):
         string = self.clean(string)
-        # Add annotations e.g. 11:55pm -> Time
+        # Add annotations e.g. 11:55pm -> <time>
         string = self.annotate(string)
 
         return string
@@ -75,6 +92,7 @@ class TextPreProcessor:
         text = unidecode(text)
         # Replace newline and other control characters
         text = control_chars.sub(' ', text)
+        text = arrows.sub(' ', text)
         return text
 
     def unpack_contractions(self, text):
@@ -86,7 +104,7 @@ class TextPreProcessor:
         Important Note: The function is taken from textacy (https://github.com/chartbeat-labs/textacy).
         """
         text = re.sub(
-            r"(\b)([Aa]re|[Cc]ould|[Dd]id|[Dd]are||[Dd]oes|[Dd]o|[Hh]ad|[Hh]as|[Hh]ave|[Ii]s|[Mm]ay|[Mm]ight|[Mm]ust|[Ss]hould|[Ww]as|[Ww]ere|[Ww]ould|[Nn]eed)n't",
+            r"(\b)([Aa]re|[Cc]ould|[Dd]id|[Dd]are||[Dd]oes|[Dd]o|[Hh]ad|[Hh]as|[Hh]ave|[Ii][Ss]|[Mm]ay|[Mm]ight|[Mm]ust|[Ss]hould|[Ww]as|[Ww]ere|[Ww]ould|[Nn]eed)[Nn]'[Tt]",
             r"\1\2 not", text)
         text = re.sub(
             r"(\b)([Hh]e|[Hh]ow|[Ii]|[Ss]he|[Tt]hat|[Tt]hey|[Ww]e|[Ww]hat|[Ww]ho|[Yy]ou)'ll",
@@ -104,15 +122,28 @@ class TextPreProcessor:
         text = re.sub(r"(\b)([Ss])han't", r"\1\2hall not", text)
         text = re.sub(r"(\b)([Yy])(?:'all|a'll)", r"\1\2ou all", text)
         text = re.sub(r"(\b)([Cc])'[Mm]on", r"\1\2ome on", text)
-        text = re.sub(r"(\b)([Ww])/", "with", text)
-        text = re.sub(r"(\b)([Ww])/([Oo])", "without", text)
+        text = re.sub(r"(\b)([Ww])/", " with ", text)
+        text = re.sub(r"(\b)([Ww])/([Oo])", " without ", text)
         text = re.sub(r"(\b)([Hh])rs", "hours", text)
         text = re.sub(r"(\b)([Mm])ins", "minutes", text)
         text = re.sub(r"(\b)([Pp])ls", "please", text)
+        text = re.sub(r"(\b)([Ss])ry", "sorry", text)
+        text = re.sub(r"(\b)([Tt])ht", "that", text)
+        text = re.sub(r"(\b)([Ii])nt'l", "international", text)
+        text = re.sub(r"(\b)([Uu])(\b)", " you ", text)
+        text = re.sub(r"\b([\/])\b", " or ", text)
+        # Unambigous shortened day names.
+        text = re.sub(
+            r"(\b)([Mm]on|[Tt]ues|[Tt]hurs|[Ff]ri)(\b)",
+            r"\1\2day", text)
 
-        # Add a space around 's, 'd due to enable word vectors to be used.
-        text = re.sub(r"(\w+)'s", r" \1 's", text)
-        text = re.sub(r"(\w+)'d", r" \1 'd", text)
+        # Add a space around 's, 'd, 'll and n't due to enable word vectors to be used.
+        text = re.sub(r"\b(\w+)('s|'d|'ll)", r"\1 \2", text)
+        text = re.sub(r"\b(\w+)(n't)", r"\1 n't", text)
+
+        # Expand out common text symbols
+        text = text.replace('&', ' and ')
+        text = text.replace('@', ' at ')
 
         return text
 
@@ -138,7 +169,7 @@ class TextPreProcessor:
         eyes = r"[8:=;Xx]"
         nose = r"['`^\-0Oo]?"
 
-        text = re_sub(r"\B{}{}[)dD>]+|\b[<(dD]+{}{}".format(eyes, nose, nose, eyes), ' <smile> ')
+        text = re_sub(r"\B{}{}[)D]+|[(D]+{}{}".format(eyes, nose, nose, eyes), ' <smile> ')
         text = re_sub(r"\B{}{}[pPbB]+".format(loleyes, nose), ' <lolface> ')
         text = re_sub(r"\B{}{}[(?]+|\)+{}{}".format(eyes, nose, nose, eyes), ' <sadface> ')
         text = re_sub(r"\B{}{}[\/\\|l]".format(eyes, nose), ' <neutralface> ')
@@ -169,16 +200,6 @@ class TextPreProcessor:
         return text
 
     def annotate_hashtags(self, text):
-        def hashtag(text):
-            text = text.group()
-            hashtag_body = text[1:]
-            if hashtag_body.isupper():
-                result = " <hashtag> {} <allcaps> ".format(hashtag_body)
-            else:
-                hashtag_body = hashtag_splitter_regex.sub(r' \1', hashtag_body)
-                result = " ".join([" <hashtag>"] + hashtag_body.split(r"(?=[A-Z])") + ["</hashtag> "])
-            return result
-
         text = re.sub(r'#', ' #', text)
         text = hashtag_regex.sub(hashtag, text)
 
@@ -207,6 +228,9 @@ class TextPreProcessor:
         # Split words
         text = word_split.sub(' ', text)
 
+        # Add spaces around parenthesis.
+        text = parenthesis_regex.sub(r' \1 ', text)
+
         # Add in wraparound annotations which surround text
         # Introduce a space before hash symbols to prevent issues where hastags are next to each other
         # e.g. #test#chicken
@@ -216,20 +240,17 @@ class TextPreProcessor:
         text = hearts_regex.sub(' <heart> ', text)
         # Replace Numbers
         text = numbers_regex.sub(' <number> ', text)
-        # Add spaces around parenthesis.
-        text = parenthesis_regex.sub(r' \1 ', text)
         # Remove multi spaces - Prevents errant <repeat> signals appearing in text
         text = re.sub('\s+', ' ', text)
         # Annotate text features e.g. elongated words, repeated punctuation.
         text = self.annotate_text_features(text)
 
-        # Expand out common text symbols
-        text = text.replace('&', ' and ')
-        text = text.replace('@', ' at ')
         text = seperate_apostrophes.sub(r' \1 \2 ', text)
         text = seperate_errant_apostrophes.sub(r' \1 \2 ', text)
         # Remove a load of unicode emoji characters
         text = emoji_regex.sub('', text)
+
+        text = text.replace('*', '')
 
         # Remove multi spaces
         text = re.sub('\s+', ' ', text)
@@ -239,7 +260,7 @@ class TextPreProcessor:
 
         # If this string is a single space replace with an <empty> tag.
         if text == ' ':
-            text = '<EMPTY>'
+            text = '<empty>'
 
         return text.strip().lower()
 

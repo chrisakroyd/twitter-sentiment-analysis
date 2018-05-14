@@ -60,11 +60,11 @@ preprocessor = TextPreProcessor()
 
 sem_eval = get_data_sem_eval(sem_eval_path)
 
-# (x_train, y_train), (x_val, y_val), word_index, num_classes, lb, tokenizer = load_data(path=sem_eval_path,
-#                                                                                        data_type='sem_eval',
-#                                                                                        max_features=MAX_FEATS)
+(x_train, y_train), (x_val, y_val), word_index, num_classes, lb, tokenizer = load_data(path=sem_eval_path,
+                                                                                       data_type='sem_eval',
+                                                                                       max_features=MAX_FEATS)
 
-(x_train, y_train), (x_val, y_val), word_index, num_classes, lb, tokenizer = load_data(path=custom, max_features=MAX_FEATS)
+# (x_train, y_train), (x_val, y_val), word_index, num_classes, lb, tokenizer = load_data(path=custom, max_features=MAX_FEATS)
 
 embedding_matrix = load_embeddings(path=glove_path,
                                    embedding_type=embed_type,
