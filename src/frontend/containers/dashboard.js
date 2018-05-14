@@ -22,6 +22,9 @@ const mapStateToProps = state =>
   });
 
 const mapDispatchToProps = dispatch => ({
+  changeDashView: (type) => {
+    dispatch(changeDashView(type));
+  },
   onDashClick: (label, type, newUrl) => {
     console.log(newUrl);
     dispatch(changeDashView(type));

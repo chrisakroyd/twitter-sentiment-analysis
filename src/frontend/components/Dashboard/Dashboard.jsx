@@ -15,7 +15,18 @@ import genSidebarDescriptors from './genSidebarDescriptors';
 import './dashboard.scss';
 
 class Dashboard extends React.Component {
+  checkURL() {
+    const pathSplit = this.props.location.pathname.split('/').filter(n => n);
+
+    if (pathSplit.length > 0 && pathSplit[0] !== this.props.activeView) {
+      // May need revisiting.
+      this.props.changeDashView(pathSplit[0].toUpperCase());
+    }
+  }
+
   render() {
+    this.checkURL();
+
     return (
       <div className="dashboard">
         <Sidebar
@@ -82,6 +93,7 @@ class Dashboard extends React.Component {
 Dashboard.propTypes = {
   // Functions
   onDashClick: PropTypes.func.isRequired,
+  changeDashView: PropTypes.func.isRequired,
   process: PropTypes.func.isRequired,
   setText: PropTypes.func.isRequired,
   tweetRefresh: PropTypes.func.isRequired,

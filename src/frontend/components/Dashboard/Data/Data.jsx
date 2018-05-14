@@ -15,10 +15,9 @@ class Data extends React.Component {
       <DatasetTile
         key={shortId.generate()}
         name={data.name}
+        description={data.description}
         size={data.size}
         words={data.words}
-        bestModel={data.bestModel}
-        bestF1Score={data.bestF1Score}
         statistics={data.statistics}
       />
     ));

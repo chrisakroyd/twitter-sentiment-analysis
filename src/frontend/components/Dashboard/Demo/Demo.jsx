@@ -43,7 +43,7 @@ const Demo = ({ process, setText, loadNewTweets, status, activeText, tweets }) =
             <div className="enter-text-row">
               <InputBar
                 onEnter={process}
-                value={activeText.originalText}
+                value={activeText.text}
                 onKeyPress={setText}
               />
               <div>
@@ -141,7 +141,6 @@ Demo.propTypes = {
     connected: PropTypes.bool.isRequired,
   }).isRequired,
   activeText: PropTypes.shape({
-    originalText: PropTypes.string.isRequired,
     text: PropTypes.string.isRequired,
     processed: PropTypes.string.isRequired,
     attentionWeights: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,

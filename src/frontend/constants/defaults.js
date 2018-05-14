@@ -34,10 +34,9 @@ const status = {
 const datasets = [
   {
     name: 'SemEval',
+    description: 'Full SemEval dataset for 2017 Task 4 including previous years.',
     size: 49568,
     words: 40694,
-    bestModel: 'LSTM_Attention',
-    bestF1Score: 72.4,
     statistics: [
       { name: 'Positive', count: 19625 },
       { name: 'Neutral', count: 22211 },
@@ -45,10 +44,9 @@ const datasets = [
     ],
   }, {
     name: 'Sent140',
+    description: 'Sent140 large tweet dataset.',
     size: 1604006,
     words: 473507,
-    bestModel: 'LSTM_Attention',
-    bestF1Score: 86.2,
     statistics: [
       { name: 'Positive', count: 800000 },
       { name: 'Neutral', count: 4006 },
@@ -56,10 +54,9 @@ const datasets = [
     ],
   }, {
     name: 'SemEval2017',
+    description: 'SemEval dataset for 2017 Task 4.',
     size: 20552,
     words: 257381,
-    bestModel: 'LSTM_Attention',
-    bestF1Score: 71.2,
     statistics: [
       { name: 'Positive', count: 7032 },
       { name: 'Neutral', count: 10299 },

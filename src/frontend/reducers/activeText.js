@@ -4,7 +4,6 @@ const search = (state = {}, action) => {
   switch (action.type) {
     case NEURAL:
       return {
-        originalText: state.text,
         text: state.text,
         processed: '',
         attentionWeights: [],
@@ -14,8 +13,7 @@ const search = (state = {}, action) => {
       };
     case NEURAL_SUCCESS:
       return {
-        originalText: action.data[0].text,
-        text: action.data[0].text,
+        text: state.text,
         processed: action.data[0].processed,
         attentionWeights: action.data[0].attentionWeights,
         classification: action.data[0].classification,
@@ -24,7 +22,6 @@ const search = (state = {}, action) => {
       };
     case NEURAL_FAILURE:
       return {
-        originalText: action.text,
         text: action.text,
         processed: state.processed,
         attentionWeights: state.attentionWeights,
