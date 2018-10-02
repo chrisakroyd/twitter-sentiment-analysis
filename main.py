@@ -20,13 +20,12 @@ if module_path not in sys.path:
 
 from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
 # Utility code.
-from src.neural_backend.load_data import load_data
-from src.neural_backend.load_embeddings import load_embeddings, load_afinn_matrix
-from src.neural_backend.preprocessor import create_polarity_dict
-from src.neural_backend.util import get_save_path
+from src.util.load_data import load_data
+from src.util.load_embeddings import load_embeddings, load_afinn_matrix
+from src.util.preprocessor import create_polarity_dict
+from src.util.util import get_save_path
 # Models
-from src.neural_backend.models.lstm_attention_skip import BiLSTMAttentionSkip
-from src.neural_backend.models.lstm_attention import BiLSTMAttention
+from src.models.lstm_attention import BiLSTMAttention
 
 TRAIN = True
 PRODUCTION = True
@@ -37,17 +36,12 @@ MAX_FEATS = 150000
 sent_140_path = './data/sent_140/training.1600000.processed.noemoticon.csv'
 sem_eval_path = './data/sem_eval/full/'
 sem_eval_2017_path = './data/sem_eval/2017_dataset/'
-custom = './data/custom/sem_eval_balanced_with_sent_140.csv'
 
 # Paths to glove embeddings.
 glove_path = './data/embeddings/glove.twitter.27B.200d.txt'
 embed_dims = 200
 embed_type = 'GLOVE'
 
-
-# (x_train, y_train), (x_val, y_val), word_index, num_classes, lb, tokenizer = load_data(path=sem_eval_2017_path,
-#                                                            data_type='sem_eval',
-#                                                            max_features=MAX_FEATS)
 
 (x_train, y_train), (x_val, y_val), word_index, num_classes, lb, tokenizer = load_data(path=sem_eval_path,
                                                                                        data_type='sem_eval',
@@ -56,8 +50,6 @@ embed_type = 'GLOVE'
 # (x_train, y_train), (x_val, y_val), word_index, num_classes, lb, tokenizer = load_data(path=sent_140_path,
 #                                                            data_type='sent_140',
 #                                                            max_features=MAX_FEATS)
-
-# (x_train, y_train), (x_val, y_val), word_index, num_classes, lb, tokenizer = load_data(path=custom, max_features=MAX_FEATS)
 
 embedding_matrix = load_embeddings(path=glove_path,
                                    embedding_type=embed_type,
@@ -74,6 +66,8 @@ vocab_size = len(word_index) + 1
 model_instance = BiLSTMAttention(num_classes=num_classes)
 
 print(num_classes)
+
+print(x_train.shape)
 
 if TRAIN:
     model = model_instance.build(vocab_size,

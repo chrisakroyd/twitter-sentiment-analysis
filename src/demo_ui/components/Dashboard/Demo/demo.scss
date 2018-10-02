@@ -1,0 +1,104 @@
+$margin: 45px;
+.live {
+  &.dash-body {
+
+    .tall-container {
+      display: flex;
+      flex-direction: column;
+      height: 800px;
+      width: calc(34% - 15px);
+      margin: 0 $margin 0 $margin;
+      margin-left: 0px;
+
+      .status-tile {
+        height: 275px;
+
+        .status-text {
+          width: 180px;
+          span:first-child {
+            font-weight: bold;
+          }
+
+          .card-name {
+            margin-bottom: 0;
+          }
+
+          .card-mem {
+            margin: 0;
+          }
+        }
+      }
+
+      .tweets-tile {
+        margin-top: $margin;
+        height: 500px;
+
+        .tile-header {
+          &.tweet-header {
+            h3 {
+              display: inline-block;
+              margin-top:0;
+            }
+
+            .refresh-button {
+              display: inline-block;
+            }
+          }
+        }
+      }
+    }
+
+    .tile-row {
+      .large-tile {
+        width: calc(66% - 15px);
+        margin: 0 40px 0 40px;
+        height: 800px;
+
+        .tile-body {
+          flex-direction: column;
+          margin-top: 20px;
+
+          h4 {
+            margin: 15px 0;
+            &:first-child {
+              margin-top: 0;
+            }
+          }
+
+
+
+          .enter-text-row {
+            display:flex;
+            flex-direction:row;
+          }
+
+          .colour-word {
+            display: inline-block;
+            background-color: #873eff;
+            padding: 0 6px;
+            border-radius: 5px;
+            color: white;
+            margin: 0 3px;
+          }
+
+          .search-bar {
+            margin: 5px 0;
+          }
+
+          .text-block {
+            width: 800px;
+          }
+
+          .classification-container {
+            display: flex;
+            flex-direction: column;
+
+            span:first-child {
+              font-weight: bold;
+            }
+          }
+        }
+      }
+    }
+  }
+}

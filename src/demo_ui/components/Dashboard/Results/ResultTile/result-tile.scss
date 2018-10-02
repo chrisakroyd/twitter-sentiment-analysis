@@ -1,0 +1,22 @@
+.result-tile {
+  height: 750px;
+  width: 45%;
+  margin: 0 15px 0 15px;
+
+
+  h4, p {
+    margin: 5px 0;
+  }
+
+  .result-stats {
+    margin-left: 50px;
+  }
+
+  .up-arrow {
+    transform: rotate(-90deg) translateX(-7px)
+  }
+
+  .down-arrow {
+    transform: rotate(90deg) translateX(5px)
+  }
+}

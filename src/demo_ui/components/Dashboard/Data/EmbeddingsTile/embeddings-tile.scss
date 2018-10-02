@@ -1,0 +1,13 @@
+.embedding-tile {
+  height: calc((700px - 73px) / 2);
+  width: 32%;
+  margin: 0 15px 0 15px;
+
+  h4, p {
+    margin: 5px 0;
+  }
+
+  .embedding-plot {
+    margin-left: 50px;
+  }
+}
