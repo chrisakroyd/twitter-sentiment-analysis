@@ -1,7 +1,14 @@
 from keras import backend as K
 from keras.engine.topology import Layer
 from keras import constraints, initializers, regularizers
-from .attention_utils import dot_product
+
+
+def dot_product(x, kernel):
+    if K.backend() == 'tensorflow':
+        # todo: check that this is correct
+        return K.squeeze(K.dot(x, kernel), axis=-1)
+    else:
+        return K.dot(x, kernel)
 
 
 class Attention(Layer):

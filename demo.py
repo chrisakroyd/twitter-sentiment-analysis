@@ -21,8 +21,8 @@ if module_path not in sys.path:
 # Utility code.
 from src.util.load_data import load_data, get_data_sem_eval
 from src.util.load_embeddings import load_embeddings
-from src.layers.Attention import Attention as Attention
-from src.util.metrics import f1, precision, recall
+from src.models.layers.Attention import Attention as Attention
+from src.metrics import f1, precision, recall
 from src.util.preprocessor import TextPreProcessor
 
 from keras.layers import Input, Dense, Bidirectional, Dropout, LSTM, Embedding, SpatialDropout1D, GaussianNoise

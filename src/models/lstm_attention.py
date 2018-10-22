@@ -2,7 +2,7 @@ from keras.layers import Input, Dense, Bidirectional, Dropout, CuDNNLSTM
 from keras.regularizers import l2
 from keras.optimizers import RMSprop
 from keras.models import Model
-from src.layers.Attention import Attention
+from src.models.layers.Attention import Attention
 
 from metrics import f1, precision, recall
 from models.TextModel import TextModel
@@ -59,7 +59,7 @@ class BiLSTMAttention(TextModel):
 
         return model
 
-    def build(self, vocab_size, embedding_matrix, afinn_matrix, input_length=5000, embed_dim=200, summary=True):
+    def build(self, vocab_size, embedding_matrix, input_length=5000, embed_dim=200, summary=True):
         model = self.create_model(vocab_size, embedding_matrix, input_length, embed_dim)
 
         # model.compile(loss='categorical_crossentropy', optimizer=Adam(lr=self.LEARN_RATE, clipnorm=CLIP_NORM),

@@ -34,13 +34,11 @@ class BiLSTMConcPool(ConcPoolModel):
         self.LEARN_RATE = LEARN_RATE
         self.num_classes = num_classes
 
-    def create_model(self, vocab_size, embedding_matrix, afinn_matrix, input_length=5000, embed_dim=200):
+    def create_model(self, vocab_size, embedding_matrix, input_length=5000, embed_dim=200):
         rnn_input = Input(shape=(input_length,))
         embedding = self.embedding_layers(rnn_input, vocab_size, embedding_matrix,
                                           dropout=0.3, noise=0.2,
                                           input_length=input_length, embed_dim=embed_dim)
-
-        affin_embedding = Embedding(vocab_size, 1, weights=[afinn_matrix], input_length=input_length)(rnn_input)
 
         bi_gru_1 = Bidirectional(CuDNNLSTM(RNN_UNITS,
                                            return_sequences=True,
@@ -65,10 +63,7 @@ class BiLSTMConcPool(ConcPoolModel):
 
         avg_pool = GlobalAveragePooling1D()(bi_gru_2)
         k_max = Lambda(_top_k)(bi_gru_2)
-        # affin_vec = Lambda(lambda x: tf.divide(sum(x, axis=1) + epsilon(), input_length))(affin_embedding)
-        affin_vec = Lambda(lambda x: sum(x, axis=1))(affin_embedding)
 
-        # conc = concatenate([last_state, k_max, avg_pool, affin_vec], name='conc_pool')
         conc = concatenate([last_state, k_max, avg_pool], name='conc_pool')
 
         drop_1 = Dropout(0.65)(conc)
@@ -78,9 +73,9 @@ class BiLSTMConcPool(ConcPoolModel):
 
         return model
 
-    def build(self, vocab_size, embedding_matrix, afinn_matrix, input_length=5000, embed_dim=200, summary=True):
+    def build(self, vocab_size, embedding_matrix, input_length=5000, embed_dim=200, summary=True):
         # model = self.create_model(vocab_size, embedding_matrix, input_length, embed_dim)
-        model = self.create_model(vocab_size, embedding_matrix, afinn_matrix, input_length, embed_dim)
+        model = self.create_model(vocab_size, embedding_matrix, input_length, embed_dim)
 
         model.compile(loss='categorical_crossentropy',
                       optimizer=RMSprop(lr=self.LEARN_RATE, clipnorm=CLIP_NORM),
