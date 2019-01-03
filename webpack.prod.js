@@ -1,20 +1,15 @@
-const webpack = require('webpack');
 const merge = require('webpack-merge');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
-const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 const common = require('./webpack.common.js');
 
 module.exports = merge(common, {
+  mode: 'production',
   devtool: 'source-map',
+  optimization: {
+    minimizer: [new TerserPlugin()],
+  },
   plugins: [
     new CleanWebpackPlugin(['dist'], { verbose: true }),
-    new UglifyJSPlugin({
-      sourceMap: true,
-    }),
-    new webpack.DefinePlugin({
-      'process.env': {
-        NODE_ENV: JSON.stringify('production'),
-      },
-    }),
   ],
 });
