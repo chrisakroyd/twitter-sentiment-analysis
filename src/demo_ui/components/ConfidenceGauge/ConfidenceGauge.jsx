@@ -1,13 +1,13 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import * as d3 from 'd3';
+import { interpolate } from 'd3-interpolate';
 import './confidence-gauge.scss';
 
-const interpolate = d3.interpolate(0.0, 100.0);
+const interpolateLin = interpolate(0.0, 100.0);
 
 const ConfidenceGauge = ({ confidence }) => {
-  const confidenceWidth = { width: `${interpolate(confidence)}%` };
+  const confidenceWidth = { width: `${interpolateLin(confidence)}%` };
   let level = 'Low';
 
   if (confidence > 0.33 && confidence < 0.66) {

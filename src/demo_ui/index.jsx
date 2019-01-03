@@ -81,7 +81,6 @@ const store = createStore(
 );
 
 store.dispatch(getTweets());
-store.dispatch(getModelStatus());
 
 render(
   <Root store={store} history={history} />,

@@ -2,14 +2,14 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import shortid from 'shortid';
 
-import * as d3 from 'd3';
+import { interpolateHcl } from 'd3-interpolate';
 import './word-heat.scss';
 
 const highColour = '#ff6d77';
 // const lowColour = '#fe9f60';
 const lowColour = '#f2e5f1';
 
-const interpolate = d3.interpolateHcl(lowColour, highColour);
+const interpolate = interpolateHcl(lowColour, highColour);
 
 class WordHeat extends React.Component {
   generateWordComponents() {

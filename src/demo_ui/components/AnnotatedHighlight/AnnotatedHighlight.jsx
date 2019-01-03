@@ -4,8 +4,7 @@ import shortid from 'shortid';
 
 import './annotated-highlight.scss';
 
-import annotations from '../../../../constants/annotations';
-
+import annotations from '../../constants/annotations';
 
 const annotatedWords = new Set(annotations);
 
