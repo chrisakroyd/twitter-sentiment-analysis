@@ -1,26 +1,27 @@
-from src.constants import FilePaths
-from src.util import namespace_json
-from src.config import model_config
+from src import constants, config, util
 from train import train
 from preprocess import preprocess
 from demo import demo
 
 
-def main(flags):
-    hparams = flags
-    mode = hparams.mode.lower()
+def main(sess_config, flags):
+    params = flags.FLAGS
+    mode = params.mode.lower().strip()
 
-    if mode == 'train':
-        train(hparams)
-    elif mode == 'preprocess':
-        preprocess(hparams)
-    elif mode == 'demo':
-        demo(hparams)
+    if mode == constants.Modes.TRAIN:
+        train(sess_config, params)
+    if mode == constants.Modes.TEST:
+        # test(sess_config, params)
+        return
+    elif mode == constants.Modes.PREPROCESS:
+        preprocess(params)
+    elif mode == constants.Modes.DEMO:
+        demo(sess_config, params)
     else:
         print('Unknown Mode.')
         exit(0)
 
 
 if __name__ == '__main__':
-    defaults = namespace_json(path=FilePaths.defaults.value)
-    main(model_config(defaults))
+    defaults = util.namespace_json(path=constants.FilePaths.DEFAULTS)
+    main(config.gpu_config(), config.model_config(defaults))

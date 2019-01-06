@@ -8,9 +8,9 @@ class Datasets:
         * SEM_EVAL_2017: Only sem eval sentiment data released in 2017.
         * SENT_140: Binary Positive/Negative data from sent 140 (http://help.sentiment140.com/for-students)
     """
-    SEM_EVAL = 'SEM_EVAL'
-    SEM_EVAL_2017 = 'SEM_EVAL_2017'
-    SENT_140 = 'SENT_140'
+    SEM_EVAL = 'sem_eval'
+    SEM_EVAL_2017 = 'sem_eval_2017'
+    SENT_140 = 'sent_140'
 
 
 class FilePaths:
@@ -43,6 +43,7 @@ class FileNames:
         * DEV: String representing val mode data.
     """
     EXAMPLES = 'examples.json'
+    META = 'meta.json'
     INDEX = '{embedding_type}_index.json'
     EMBEDDINGS = '{embedding_type}_embeddings.npy'
     TF_RECORD = '{name}.tfrecord'

@@ -158,7 +158,7 @@ def inputs_as_tuple(placeholders):
         Returns:
             A tuple of input tensors.
     """
-    keys = ['context_words', 'context_chars', 'context_length', 'query_words', 'query_chars', 'query_length']
+    keys = ['words', 'chars', 'num_tokens']
     return dict_keys_as_tuple(placeholders, keys)
 
 
@@ -169,7 +169,7 @@ def labels_as_tuple(placeholders):
         Returns:
             A tuple of input tensors.
     """
-    keys = ['answer_starts', 'answer_ends', 'answer_id']
+    keys = ['label']
     return dict_keys_as_tuple(placeholders, keys)
 
 
