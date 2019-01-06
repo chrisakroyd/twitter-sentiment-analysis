@@ -1,6 +1,20 @@
 import tensorflow as tf
 
 
+def gpu_config():
+    """ Function that creates a GPU config.
+        Returns:
+            A `tf.ConfigProto` instance.
+    """
+    config = tf.ConfigProto(
+        allow_soft_placement=True,
+    )
+
+    config.gpu_options.allow_growth = True
+
+    return config
+
+
 def model_config(defaults):
     flags = tf.flags
     # Mode to run in, e.g. train, test.
