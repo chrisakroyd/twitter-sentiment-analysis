@@ -1,15 +1,5 @@
 import tensorflow as tf
 
-from keras import backend as K
-
-
-def dot_product(x, kernel):
-    if K.backend() == 'tensorflow':
-        # todo: check that this is correct
-        return K.squeeze(K.dot(x, kernel), axis=-1)
-    else:
-        return K.dot(x, kernel)
-
 
 class Attention(tf.keras.layers.Layer):
     def __init__(self,
@@ -50,35 +40,35 @@ class Attention(tf.keras.layers.Layer):
 
         self.built = True
 
-    def compute_mask(self, input, input_mask=None):
+    def compute_mask(self, x, input_mask=None):
         if isinstance(input_mask, list):
             return [None] * len(input_mask)
         else:
             return None
 
     def call(self, x, training=None, mask=None):
-        eij = dot_product(x, self.kernel)
+        eij = tf.squeeze(tf.keras.backend.dot(x, self.kernel), axis=-1)
 
         if self.use_bias:
             eij += self.bias
 
-        eij = K.tanh(eij)
+        eij = tf.tanh(eij)
 
-        a = K.exp(eij)
+        a = tf.exp(eij)
 
         # apply mask.
         if mask is not None:
-            a *= K.cast(mask, K.floatx())
+            a *= tf.cast(mask, tf.float32)
 
-        a /= K.cast(K.sum(a, axis=1, keepdims=True) + K.epsilon(), K.floatx())
+        a /= tf.cast(tf.reduce_sum(a, axis=1, keepdims=True) + tf.keras.backend.epsilon(), tf.float32)
 
         att_weights = a
 
-        a = K.expand_dims(a)
+        a = tf.expand_dims(a, axis=-1)
         # Calculate the weighted sum.
         weighted_input = x * a
 
-        result = K.sum(weighted_input, axis=1)
+        result = tf.reduce_sum(weighted_input, axis=1)
 
         if self.return_attention:
             return [result, att_weights]
