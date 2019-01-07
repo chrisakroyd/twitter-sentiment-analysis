@@ -61,7 +61,7 @@ def model_config(defaults):
     flags.DEFINE_boolean('use_elmo', defaults.use_elmo, 'Whether to use ELMo embeddings.')
     # Model hyper parameters (set to QANet paper values).
     flags.DEFINE_integer('batch_size', defaults.batch_size, 'Batch Size')
-    flags.DEFINE_integer('hidden_size', defaults.hidden_size, 'Number of hidden units to use.')
+    flags.DEFINE_integer('hidden_units', defaults.hidden_units, 'Number of hidden units to use.')
     # Flags for train hyper params e.g. dropout, l2, gradient ema decay values (set to QANet paper values).
     flags.DEFINE_float('dropout', defaults.dropout, 'Dropout rate.', lower_bound=0.0, upper_bound=1.0)
     flags.DEFINE_float('attn_dropout', defaults.attn_dropout, 'Attention dropout rate.',

@@ -1,6 +1,6 @@
+import tensorflow as tf
+
 from keras import backend as K
-from keras.engine.topology import Layer
-from keras import constraints, initializers, regularizers
 
 
 def dot_product(x, kernel):
@@ -11,47 +11,40 @@ def dot_product(x, kernel):
         return K.dot(x, kernel)
 
 
-class Attention(Layer):
+class Attention(tf.keras.layers.Layer):
     def __init__(self,
                  kernel_initializer='glorot_uniform',
                  bias_initializer='zeros',
                  kernel_regularizer=None,
                  bias_regularizer=None,
-                 kernel_constraint=None,
-                 bias_constraint=None,
                  use_bias=True,
                  return_attention=False,
                  **kwargs):
         super(Attention, self).__init__(**kwargs)
         self.supports_masking = True
         # Weights/bias initializers e.g. glorut, zeros
-        self.kernel_initializer = initializers.get(kernel_initializer)
-        self.bias_initializer = initializers.get(bias_initializer)
+        self.kernel_initializer = tf.keras.initializers.get(kernel_initializer)
+        self.bias_initializer = tf.keras.initializers.get(bias_initializer)
         # Regularization support.
-        self.kernel_regularizer = regularizers.get(kernel_regularizer)
-        self.bias_regularizer = regularizers.get(bias_regularizer)
-        # Any constraints
-        self.kernel_constraint = constraints.get(kernel_constraint)
-        self.bias_constraint = constraints.get(bias_constraint)
+        self.kernel_regularizer = tf.keras.regularizers.get(kernel_regularizer)
+        self.bias_regularizer = tf.keras.regularizers.get(bias_regularizer)
 
         self.use_bias = use_bias
         self.return_attention = return_attention
 
     def build(self, input_shape):
         assert len(input_shape) == 3
-
-        self.kernel = self.add_weight(shape=(input_shape[-1], 1),
+        self.kernel = self.add_weight(shape=(int(input_shape[-1]), 1, ),
                                       initializer=self.kernel_initializer,
                                       name='{}_W'.format(self.name),
                                       regularizer=self.kernel_regularizer,
-                                      constraint=self.kernel_constraint,
                                       trainable=True)
         if self.use_bias:
-            self.bias = self.add_weight(shape=(input_shape[1],),
+            self.bias = self.add_weight(shape=(int(input_shape[1]), ),
                                         initializer=self.bias_initializer,
                                         name='{}_b'.format(self.name),
                                         regularizer=self.bias_regularizer,
-                                        constraint=self.bias_constraint)
+                                        trainable=True)
         else:
             self.bias = None
 
@@ -63,7 +56,7 @@ class Attention(Layer):
         else:
             return None
 
-    def call(self, x, mask=None):
+    def call(self, x, training=None, mask=None):
         eij = dot_product(x, self.kernel)
 
         if self.use_bias:

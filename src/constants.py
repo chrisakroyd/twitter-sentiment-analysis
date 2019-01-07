@@ -44,6 +44,7 @@ class FileNames:
     """
     EXAMPLES = 'examples.json'
     META = 'meta.json'
+    CLASSES = 'classes.json'
     INDEX = '{embedding_type}_index.json'
     EMBEDDINGS = '{embedding_type}_embeddings.npy'
     TF_RECORD = '{name}.tfrecord'

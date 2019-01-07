@@ -158,19 +158,20 @@ def create_pipeline(params, tables, record_paths, training=True):
     # Perform word -> index mapping.
     data = index_lookup(data, tables, char_limit=params.char_limit,
                         num_parallel_calls=parallel_calls)
+    padded_shapes = get_padded_shapes(max_tokens=params.max_tokens, max_characters=params.char_limit)
 
     if params.bucket and training:
         buckets = create_buckets(params.bucket_size, params.max_tokens, params.bucket_ranges)
 
         def length_fn(fields):
-            return fields['context_length']
+            return fields['num_tokens']
 
         data = data.apply(
             tf.data.experimental.bucket_by_sequence_length(element_length_func=length_fn,
+                                                           padded_shapes=padded_shapes,
                                                            bucket_batch_sizes=[params.batch_size] * (len(buckets) + 1),
                                                            bucket_boundaries=buckets))
     else:
-        padded_shapes = get_padded_shapes(max_characters=params.char_limit)
         data = data.padded_batch(
             batch_size=params.batch_size,
             padded_shapes=padded_shapes,

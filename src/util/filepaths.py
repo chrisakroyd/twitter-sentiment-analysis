@@ -122,3 +122,13 @@ def tf_record_paths(params, training):
 def examples_path(params):
     _, _, processed_dir, _ = get_directories(params)
     return os.path.join(processed_dir, constants.FileNames.EXAMPLES)
+
+
+def meta_path(params):
+    _, _, processed_dir, _ = get_directories(params)
+    return os.path.join(processed_dir, constants.FileNames.META)
+
+
+def classes_path(params):
+    _, _, processed_dir, _ = get_directories(params)
+    return os.path.join(processed_dir, constants.FileNames.CLASSES)

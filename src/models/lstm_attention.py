@@ -31,7 +31,7 @@ class LSTMAttention(tf.keras.models.Model):
         self.preds = Activation('softmax')
 
     def call(self, x, training=None, mask=None):
-        words, chars = x
+        words, chars, num_tokens = x
 
         text_emb = self.embedding([words, chars], training=training)
 
@@ -39,19 +39,19 @@ class LSTMAttention(tf.keras.models.Model):
         rnn_1_out = self.drop_1(rnn_1_out, training=training)
 
         rnn_2_out = self.rnn_2(rnn_1_out)
-        rnn_2_out = self.drop_2(rnn_2_out)
+        rnn_2_out = self.drop_2(rnn_2_out, training=training)
 
         attn_out = self.attention(rnn_2_out)
-        attn_out = self.drop_3(attn_out)
+        attn_out = self.drop_3(attn_out, training=training)
 
         logits = self.out(attn_out)
         preds = self.preds(logits)
 
         return logits, preds, attn_out
 
-    def compute_loss(self, start_logits, start_labels, l2=None):
+    def compute_loss(self, logits, labels, l2=None):
         loss = tf.nn.sparse_softmax_cross_entropy_with_logits(
-                logits=start_logits, labels=start_labels)
+                logits=logits, labels=labels)
 
         loss = tf.reduce_mean(loss)
 
