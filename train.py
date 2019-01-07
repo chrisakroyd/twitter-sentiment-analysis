@@ -1,80 +1,98 @@
-import keras.backend as K
-
-# Only use the amount of memory we require rather than the maximum
-if 'tensorflow' == K.backend():
-    import tensorflow as tf
-    from keras.backend.tensorflow_backend import set_session
-    config = tf.ConfigProto()
-    config.gpu_options.allow_growth = True
-    config.gpu_options.visible_device_list = "0"
-    set_session(tf.Session(config=config))
-
-from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
-# Utility code.
-from src.util.load_data import load_data
-from src.util import get_save_path, namespace_json, load_embeddings
-from src.constants import FilePaths
-from src.config import model_config
-
-# Models
-from src.models.lstm_attention import BiLSTMAttention
-
-MAX_FEATS = 150000
-
-# Paths to data sets
-sent_140_path = './data/sent_140/training.1600000.processed.noemoticon.csv'
-sem_eval_path = './data/sem_eval/full/'
-sem_eval_2017_path = './data/sem_eval/2017_dataset/'
-
-# Paths to glove embeddings.
-glove_path = './data/embeddings/glove.twitter.27B.200d.txt'
-embed_dims = 200
-embed_type = 'GLOVE'
+import tensorflow as tf
+import os
+from tqdm import tqdm
+from src import config, constants, metrics, models, pipeline, train_utils, util
 
 
-def train(hparams):
-    (x_train, y_train), (x_val, y_val), word_index, num_classes, lb, tokenizer = load_data(path=sem_eval_path,
-                                                                                           data_type='sem_eval',
-                                                                                           max_features=MAX_FEATS)
-    # #
-    # (x_train, y_train), (x_val, y_val), word_index, num_classes, lb, tokenizer = load_data(path=sent_140_path,
-    #                                                            data_type='sent_140',
-    #                                                            max_features=MAX_FEATS)
+def train(sess_config, params):
+    _, out_dir, model_dir, log_dir = util.train_paths(params)
+    word_index_path, _, char_index_path = util.index_paths(params)
+    embedding_paths = util.embedding_paths(params)
+    meta_path = util.meta_path(params)
+    util.make_dirs([out_dir, model_dir, log_dir])
 
-    embedding_matrix = load_embeddings(path=hparams.embed_path,
-                                       word_index=word_index,
-                                       embedding_dimensions=hparams.embed_dims)
+    vocabs = util.load_vocab_files(paths=(word_index_path, char_index_path))
+    word_matrix, trainable_matrix, character_matrix = util.load_numpy_files(paths=embedding_paths)
+    meta = util.load_json(meta_path)
 
-    vocab_size = len(word_index) + 1
+    with tf.device('/cpu:0'):
+        tables = pipeline.create_lookup_tables(vocabs)
 
-    # model_instance = BiLSTMAttentionSkip(num_classes=num_classes)
-    model_instance = BiLSTMAttention(num_classes=num_classes)
+        train_tfrecords = util.tf_record_paths(params, training=True)
+        val_tfrecords = util.tf_record_paths(params, training=False)
+        train_set, train_iter = pipeline.create_pipeline(params, tables, train_tfrecords, training=True)
+        _, val_iter = pipeline.create_pipeline(params, tables, val_tfrecords, training=False)
 
-    print(num_classes)
+    with tf.Session(config=sess_config) as sess:
+        sess.run([tf.tables_initializer(), train_iter.initializer, val_iter.initializer])
+        handle = tf.placeholder(tf.string, shape=[])
+        iterator = tf.data.Iterator.from_string_handle(handle, train_set.output_types, train_set.output_shapes)
 
-    print(x_train.shape)
-    model = model_instance.build(vocab_size,
-                                 embedding_matrix,
-                                 input_length=x_train.shape[1],
-                                 embed_dim=embed_dims)
+        model = models.LSTMAttention(word_matrix, character_matrix, trainable_matrix, 3, params)
 
-    checkpoint = ModelCheckpoint(get_save_path(model_instance), save_best_only=True)
+        placeholders = iterator.get_next()
+        # Features and labels.
+        model_inputs = train_utils.inputs_as_tuple(placeholders)
+        label = train_utils.labels_as_tuple(placeholders)[0]
+        logits, pred, _ = model(model_inputs, training=True)
 
-    early_stop = EarlyStopping(monitor='val_loss',
-                               patience=5,
-                               verbose=1,
-                               min_delta=0.00001)
+        loss_op = model.compute_loss(logits, label, l2=params.l2)
 
-    logging = TensorBoard(log_dir='./data/logs')
+        train_op = train_utils.construct_train_op(loss_op,
+                                                  learn_rate=params.learn_rate,
+                                                  warmup_scheme=params.warmup_scheme,
+                                                  warmup_steps=params.warmup_steps,
+                                                  clip_norm=params.gradient_clip,
+                                                  ema_decay=params.ema_decay,
+                                                  beta1=params.beta1,
+                                                  beta2=params.beta2,
+                                                  epsilon=params.epsilon)
 
-    model.fit(x=x_train,
-              y=y_train,
-              validation_data=(x_val, y_val),
-              epochs=hparams.epochs,
-              batch_size=hparams.batch_size,
-              callbacks=[checkpoint, early_stop, logging])
+        train_outputs = [loss_op, pred, train_op]
+        val_outputs = [loss_op, pred]
+        sess.run(tf.global_variables_initializer())
+        # Saver boilerplate
+        writer = tf.summary.FileWriter(log_dir, graph=sess.graph)
+        saver = train_utils.get_saver()
+        # Initialize the handles for switching.
+        train_handle = sess.run(train_iter.string_handle())
+        val_handle = sess.run(val_iter.string_handle())
+
+        if os.path.exists(model_dir) and tf.train.latest_checkpoint(model_dir) is not None:
+            saver.restore(sess, tf.train.latest_checkpoint(model_dir))
+
+        total_steps = int((params.epochs * meta['num_train'] / params.batch_size))
+        global_step = max(sess.run(model.global_step), 1)
+
+        pbar = tqdm(total=total_steps)
+        # Set pbar to where we left off.
+        pbar.update(global_step)
+        train_preds = []
+
+        for _ in range(int(total_steps - global_step)):
+            loss, pred, _ = sess.run(fetches=train_outputs, feed_dict={handle: train_handle})
+            train_preds.append((loss, pred, ))
+            pbar.update()
+
+            # Save at the end of each epoch
+            if global_step % int(meta['num_train'] / params.batch_size) == 0:
+                val_preds = []
+                for _ in range(meta['num_val']):
+                    loss, pred = sess.run(fetches=val_outputs,
+                                          feed_dict={
+                                              handle: val_handle,
+                                              model.dropout: 0.0,
+                                              model.attn_dropout: 0.0,
+                                          })
+                    val_preds.append((loss, pred, ))
+
+                writer.flush()
+                filename = os.path.join(model_dir, 'model_{}.ckpt'.format(global_step))
+                # Save the model
+                saver.save(sess, filename)
+                train_preds = []
 
 
 if __name__ == '__main__':
-    defaults = namespace_json(path=FilePaths.defaults.value)
-    train(model_config(defaults))
+    defaults = util.namespace_json(path=constants.FilePaths.DEFAULTS)
+    train(config.gpu_config(), config.model_config(defaults))
