@@ -1,8 +1,6 @@
 import re
 from ftfy import fix_text
 from unidecode import unidecode
-from afinn import Afinn
-from collections import Counter
 from wordsegment import load, segment
 
 load()
