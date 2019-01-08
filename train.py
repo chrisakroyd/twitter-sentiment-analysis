@@ -28,13 +28,13 @@ def train(sess_config, params):
         handle = tf.placeholder(tf.string, shape=[])
         iterator = tf.data.Iterator.from_string_handle(handle, train_set.output_types, train_set.output_shapes)
 
-        model = models.LSTMAttention(word_matrix, character_matrix, trainable_matrix, 3, params)
+        model = models.LSTMAttention(word_matrix, character_matrix, trainable_matrix, meta['num_classes'], params)
 
         placeholders = iterator.get_next()
         # Features and labels.
         model_inputs = train_utils.inputs_as_tuple(placeholders)
         label_tensor = train_utils.labels_as_tuple(placeholders)[0]
-        logits, pred, _ = model(model_inputs, training=True)
+        logits, prediction, _ = model(model_inputs, training=True)
 
         loss_op = model.compute_loss(logits, label_tensor, l2=params.l2)
 
@@ -48,8 +48,8 @@ def train(sess_config, params):
                                                   beta2=params.beta2,
                                                   epsilon=params.epsilon)
 
-        train_outputs = [loss_op, pred, label_tensor, train_op]
-        val_outputs = [loss_op, pred, label_tensor]
+        train_outputs = [loss_op, prediction, label_tensor, train_op]
+        val_outputs = [loss_op, prediction, label_tensor]
         sess.run(tf.global_variables_initializer())
         # Saver boilerplate
         writer = tf.summary.FileWriter(log_dir, graph=sess.graph)
@@ -75,7 +75,7 @@ def train(sess_config, params):
             train_preds.append((loss, pred, label, ))
             pbar.update()
             # Save at the end of each epoch
-            if (global_step % (meta['num_train'] // params.batch_size)) == 0:
+            if (global_step % (meta['num_train'] // params.batch_size)) == 0 or global_step == total_steps:
                 val_preds = []
                 for _ in range(meta['num_val']):
                     loss, pred, label = sess.run(fetches=val_outputs,
@@ -89,7 +89,8 @@ def train(sess_config, params):
                 metrics.evaluate_list(train_preds, 'train', writer, global_step)
                 val_metrics = metrics.evaluate_list(val_preds, 'val', writer, global_step)
 
-                print('Epoch 1: val_recall:{recall}, val_precision: {prec}, val_f1: {f1}'.format(
+                print('Epoch {num}: val_recall:{recall}, val_precision: {prec}, val_f1: {f1}'.format(
+                    num=int(global_step / (meta['num_train'] // params.batch_size)),
                     recall=val_metrics['recall'],
                     prec=val_metrics['precision'],
                     f1=val_metrics['f1']
