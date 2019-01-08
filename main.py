@@ -1,5 +1,6 @@
 from src import constants, config, util
 from train import train
+from test import test
 from preprocess import preprocess
 from demo import demo
 
@@ -11,8 +12,7 @@ def main(sess_config, flags):
     if mode == constants.Modes.TRAIN:
         train(sess_config, params)
     if mode == constants.Modes.TEST:
-        # test(sess_config, params)
-        return
+        test(sess_config, params)
     elif mode == constants.Modes.PREPROCESS:
         preprocess(params)
     elif mode == constants.Modes.DEMO:
