@@ -93,72 +93,6 @@ class TextPreProcessor:
         text = arrows.sub(' ', text)
         return text
 
-    def unpack_contractions(self, text):
-        """
-        Replace *English* contractions in ``text`` str with their unshortened forms.
-        N.B. The "'d" and "'s" forms are ambiguous (had/would, is/has/possessive),
-        so are left as-is.
-        ---------
-        Important Note: The function is taken from textacy (https://github.com/chartbeat-labs/textacy).
-        """
-        text = re.sub(
-            r"(\b)([Aa]re|[Cc]ould|[Dd]id|[Dd]are||[Dd]oes|[Dd]o|[Hh]ad|[Hh]as|[Hh]ave|[Ii][Ss]|[Mm]ay|[Mm]ight|[Mm]ust|[Ss]hould|[Ww]as|[Ww]ere|[Ww]ould|[Nn]eed)[Nn]'[Tt]",
-            r"\1\2 not", text)
-        text = re.sub(
-            r"(\b)([Hh]e|[Hh]ow|[Ii]|[Ss]he|[Tt]hat|[Tt]hey|[Ww]e|[Ww]hat|[Ww]ho|[Yy]ou)'ll",
-            r"\1\2 will", text)
-        text = re.sub(r"(\b)([Tt]hat|[Tt]hey|[Hh]ow|[Ww]e|[Ww]hat|[Ww]ho|[Yy]ou)'re", r"\1\2 are",
-                      text)
-        text = re.sub(
-            r"(\b)([Ii]|[Cc]ould|[Ss]hould|[Tt]hey|[Ww]e|[Ww]hat|[Ww]ho|[Ww]ould|[Yy]ou|[Mm]ight|[Mm]ust|[Mm]ay)'ve",
-            r"\1\2 have", text)
-        # non-standard
-        text = re.sub(r"(\b)([Cc]a)n't", r"\1\2n not", text)
-        text = re.sub(r"(\b)([Ii])'m", r"\1\2 am", text)
-        text = re.sub(r"(\b)([Ll]et)'s", r"\1\2 us", text)
-        text = re.sub(r"(\b)([Ww])on't", r"\1\2ill not", text)
-        text = re.sub(r"(\b)([Ss])han't", r"\1\2hall not", text)
-        text = re.sub(r"(\b)([Yy])(?:'all|a'll)", r"\1\2ou all", text)
-        text = re.sub(r"(\b)([Cc])'[Mm]on", r"\1\2ome on", text)
-        text = re.sub(r"(\b)([Ww])/", " with ", text)
-        text = re.sub(r"(\b)([Ww])/([Oo])", " without ", text)
-        text = re.sub(r"(\b)([Hh])rs", "hours", text)
-        text = re.sub(r"(\b)([Mm])ins", "minutes", text)
-        text = re.sub(r"(\b)([Pp])ls", "please", text)
-        text = re.sub(r"(\b)([Ss])ry", "sorry", text)
-        text = re.sub(r"(\b)([Tt])ht", "that", text)
-        text = re.sub(r"(\b)([Ii])nt'l", "international", text)
-        text = re.sub(r"(\b)([Uu])(\b)", " you ", text)
-        text = re.sub(r"\b([\/])\b", " or ", text)
-        # Unambigous shortened day names.
-        text = re.sub(
-            r"(\b)([Mm]on|[Tt]ues|[Tt]hurs|[Ff]ri)(\b)",
-            r"\1\2day", text)
-
-        # Add a space around 's, 'd, 'll and n't due to enable word vectors to be used.
-        text = re.sub(r"\b(\w+)('s|'d|'ll)", r"\1 \2", text)
-        text = re.sub(r"\b(\w+)(n't)", r"\1 n't", text)
-
-        # Expand out common text symbols
-        text = text.replace('&', ' and ')
-        text = text.replace('@', ' at ')
-
-        return text
-
-    def unpack_placements(self, text):
-        text = re.sub(r'1[sS][tT]', 'first', text)
-        text = re.sub(r'2[nN][dD]', 'second', text)
-        text = re.sub(r'3[rR][dD]', 'third', text)
-        text = re.sub(r'4[tT][hH]', 'fourth', text)
-        text = re.sub(r'5[tT][hH]', 'fifth', text)
-        text = re.sub(r'6[tT][hH]', 'sixth', text)
-        text = re.sub(r'7[tT][hH]', 'seventh', text)
-        text = re.sub(r'8[tT][hH]', 'eigth', text)
-        text = re.sub(r'9[tT][hH]', 'ninth', text)
-        text = re.sub(r'10[tT][hH]', 'tenth', text)
-
-        return text
-
     def replace_smileys(self, text):
         def re_sub(pattern, repl):
             return re.sub(pattern, repl, text, flags=FLAGS)
@@ -216,10 +150,6 @@ class TextPreProcessor:
     def annotate(self, text):
         # Annotate basic variables e.g. IP, URL's, Dates, times, scores etc.
         text = self.annotate_basic_attributes(text)
-        # Unpack can't -> can not, c'mon -> come on
-        text = self.unpack_contractions(text)
-        # 1st, 2nd, 3rd  -> First, Second, Third. Performed post-date annotation so we don't remove any useful details
-        text = self.unpack_placements(text)
         # Replace various different smileys with a common annotation.
         text = self.replace_smileys(text)
 

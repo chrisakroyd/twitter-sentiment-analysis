@@ -33,10 +33,10 @@ def train(sess_config, params):
         placeholders = iterator.get_next()
         # Features and labels.
         model_inputs = train_utils.inputs_as_tuple(placeholders)
-        label = train_utils.labels_as_tuple(placeholders)[0]
+        label_tensor = train_utils.labels_as_tuple(placeholders)[0]
         logits, pred, _ = model(model_inputs, training=True)
 
-        loss_op = model.compute_loss(logits, label, l2=params.l2)
+        loss_op = model.compute_loss(logits, label_tensor, l2=params.l2)
 
         train_op = train_utils.construct_train_op(loss_op,
                                                   learn_rate=params.learn_rate,
@@ -48,8 +48,8 @@ def train(sess_config, params):
                                                   beta2=params.beta2,
                                                   epsilon=params.epsilon)
 
-        train_outputs = [loss_op, pred, train_op]
-        val_outputs = [loss_op, pred]
+        train_outputs = [loss_op, pred, label_tensor, train_op]
+        val_outputs = [loss_op, pred, label_tensor]
         sess.run(tf.global_variables_initializer())
         # Saver boilerplate
         writer = tf.summary.FileWriter(log_dir, graph=sess.graph)
@@ -70,21 +70,30 @@ def train(sess_config, params):
         train_preds = []
 
         for _ in range(int(total_steps - global_step)):
-            loss, pred, _ = sess.run(fetches=train_outputs, feed_dict={handle: train_handle})
-            train_preds.append((loss, pred, ))
+            global_step = sess.run(model.global_step) + 1
+            loss, pred, label, _ = sess.run(fetches=train_outputs, feed_dict={handle: train_handle})
+            train_preds.append((loss, pred, label, ))
             pbar.update()
-
             # Save at the end of each epoch
-            if global_step % int(meta['num_train'] / params.batch_size) == 0:
+            if (global_step % (meta['num_train'] // params.batch_size)) == 0:
                 val_preds = []
                 for _ in range(meta['num_val']):
-                    loss, pred = sess.run(fetches=val_outputs,
-                                          feed_dict={
-                                              handle: val_handle,
-                                              model.dropout: 0.0,
-                                              model.attn_dropout: 0.0,
-                                          })
-                    val_preds.append((loss, pred, ))
+                    loss, pred, label = sess.run(fetches=val_outputs,
+                                                 feed_dict={
+                                                    handle: val_handle,
+                                                    model.dropout: 0.0,
+                                                    model.attn_dropout: 0.0,
+                                                  })
+                    val_preds.append((loss, pred, label, ))
+
+                metrics.evaluate_list(train_preds, 'train', writer, global_step)
+                val_metrics = metrics.evaluate_list(val_preds, 'val', writer, global_step)
+
+                print('Epoch 1: val_recall:{recall}, val_precision: {prec}, val_f1: {f1}'.format(
+                    recall=val_metrics['recall'],
+                    prec=val_metrics['precision'],
+                    f1=val_metrics['f1']
+                ))
 
                 writer.flush()
                 filename = os.path.join(model_dir, 'model_{}.ckpt'.format(global_step))
