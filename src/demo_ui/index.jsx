@@ -4,12 +4,11 @@ import { createStore, applyMiddleware, combineReducers } from 'redux';
 import { routerMiddleware, routerReducer } from 'react-router-redux';
 import thunk from 'redux-thunk';
 
-import { getTweets, getModelStatus } from './actions/compositeActions';
+import { getTweets } from './actions/compositeActions';
 
 import searchApp from './reducers';
 import Root from './components/Root';
-import { SIDEBAR_LIVE } from './constants/sidebar';
-import { tweets, status, datasets, embeddings, results, models } from './constants/defaults';
+import { tweets } from './constants/defaults';
 
 
 import './index.scss';
@@ -40,9 +39,6 @@ const reducers = combineReducers({
 });
 
 const defaultState = {
-  appState: {
-    activeView: SIDEBAR_LIVE,
-  },
   activeText: {
     text: 'Hey @_ChrisAkroyd_, I like you, check this out http://bbc.co.uk',
     processed: 'Hey <user> , I like you , check this out <url>',
@@ -55,23 +51,6 @@ const defaultState = {
     loading: false,
     tweets,
   },
-  embeddings: {
-    loading: false,
-    embeddings,
-  },
-  datasets: {
-    loading: false,
-    datasets,
-  },
-  results: {
-    loading: false,
-    results,
-  },
-  models: {
-    loading: false,
-    models,
-  },
-  status,
 };
 
 const store = createStore(

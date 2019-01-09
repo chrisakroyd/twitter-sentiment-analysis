@@ -1,8 +1,8 @@
-import { NEURAL, NEURAL_SUCCESS, NEURAL_FAILURE, SET_INPUT_TEXT } from '../constants/actions';
+import { PREDICT, PREDICT_SUCCESS, PREDICT_FAILURE, SET_INPUT_TEXT } from '../constants/actions';
 
 const search = (state = {}, action) => {
   switch (action.type) {
-    case NEURAL:
+    case PREDICT:
       return {
         text: state.text,
         processed: '',
@@ -11,7 +11,7 @@ const search = (state = {}, action) => {
         confidence: 0.0,
         loading: true,
       };
-    case NEURAL_SUCCESS:
+    case PREDICT_SUCCESS:
       return {
         text: state.text,
         processed: action.data[0].processed,
@@ -20,7 +20,7 @@ const search = (state = {}, action) => {
         confidence: action.data[0].confidence,
         loading: false,
       };
-    case NEURAL_FAILURE:
+    case PREDICT_FAILURE:
       return {
         text: action.text,
         processed: state.processed,

@@ -85,13 +85,6 @@ Demo.propTypes = {
   process: PropTypes.func.isRequired,
   setText: PropTypes.func.isRequired,
   // Data
-  status: PropTypes.shape({
-    memoryUsage: PropTypes.number.isRequired,
-    maxMemoryUsage: PropTypes.number.isRequired,
-    load: PropTypes.number.isRequired,
-    graphicsCard: PropTypes.string.isRequired,
-    connected: PropTypes.bool.isRequired,
-  }).isRequired,
   activeText: PropTypes.shape({
     text: PropTypes.string.isRequired,
     processed: PropTypes.string.isRequired,

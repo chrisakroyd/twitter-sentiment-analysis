@@ -1,9 +1,4 @@
-
-const debug = true;
-const siteUrl = 'http://localhost:8080';
-
+// @TODO Hook this file into defaults.json in /data/
 module.exports = {
-  debug,
-  siteUrl: debug ? siteUrl : 'https://ChrisAkroyd.com',
+  demoPort: 5000,
 };
-

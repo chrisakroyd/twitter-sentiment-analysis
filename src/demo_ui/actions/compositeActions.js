@@ -2,14 +2,14 @@ import axios from 'axios';
 
 import config from '../config';
 import { tweets, tweetsSuccess, tweetsFailure } from './twitterActions';
-import { neural, neuralSuccess, neuralFailure } from './neuralActions';
+import { predict, predictSuccess, predictFailure } from './predictActions';
 
-export function getTweets(type) {
+const demoUrl = `http://localhost:${config.demoPort}`;
+
+export function getTweets() {
   return (dispatch) => {
     dispatch(tweets());
-
-    // return axios.get(`${config.siteUrl}/api/v1/tweets/${type}/sample`)
-    return axios.get(`http://localhost:5000/tweets/train/sample`)
+    return axios.get(`${demoUrl}/api/v1/examples`, { params: { numExamples: 1 } })
       .then(res => dispatch(tweetsSuccess(res.data)))
       .catch(err => dispatch(tweetsFailure(err)));
   };
@@ -20,11 +20,10 @@ export function getPrediction() {
   return (dispatch, getState) => {
     const active = getState().activeText;
 
-    dispatch(neural());
+    dispatch(predict());
 
-    // return axios.post(`${config.siteUrl}/api/v1/tweets/process`, {text: ''})
-    return axios.post(`http://localhost:5000/tweets/process`, { text: active.text })
-      .then(res => dispatch(neuralSuccess(res.data)))
-      .catch(err => dispatch(neuralFailure(err)));
+    return axios.post(`${demoUrl}/api/v1/model/predict`, { text: active.text })
+      .then(res => dispatch(predictSuccess(res.data)))
+      .catch(err => dispatch(predictFailure(err)));
   };
 }

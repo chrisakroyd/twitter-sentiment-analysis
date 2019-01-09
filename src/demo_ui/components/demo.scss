@@ -8,18 +8,6 @@ $sidebar-width: 100px;
   flex-direction: column;
   width: 100%;
 
-  .connected, .positive {
-    color: #46cea6;
-  }
-
-  .disconnected, .negative {
-    color: #f65177;
-  }
-
-  .neutral {
-
-  }
-
   .loading-spinner-container {
     margin: $dash-body-margin;
     height: calc(100vh - 151px - 50px);
@@ -109,24 +97,6 @@ $sidebar-width: 100px;
 
           .card-mem {
             margin: 0;
-          }
-        }
-      }
-
-      .tweets-tile {
-        margin-top: $margin;
-        height: 500px;
-
-        .tile-header {
-          &.tweet-header {
-            h3 {
-              display: inline-block;
-              margin-top:0;
-            }
-
-            .refresh-button {
-              display: inline-block;
-            }
           }
         }
       }
