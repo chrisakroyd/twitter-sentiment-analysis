@@ -23,7 +23,7 @@ class LSTMAttention(tf.keras.models.Model):
 
         self.drop_2 = Dropout(self.dropout, name='bi_gru_2_dropout')
 
-        self.attention = layers.Attention()
+        self.attention = layers.Attention(return_attention=True)
 
         self.drop_3 = Dropout(self.attn_dropout, name='attention_dropout')
 
@@ -41,7 +41,7 @@ class LSTMAttention(tf.keras.models.Model):
         rnn_2_out = self.rnn_2(rnn_1_out)
         rnn_2_out = self.drop_2(rnn_2_out, training=training)
 
-        attn_out, attn_weights = self.attention(rnn_2_out, return_attention=True)
+        attn_out, attn_weights = self.attention(rnn_2_out)
         attn_out = self.drop_3(attn_out, training=training)
 
         logits = self.out(attn_out)

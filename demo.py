@@ -1,166 +1,121 @@
-import keras.backend as K
 import os
-import sys
+import random
+import numpy as np
+import tensorflow as tf
+# from src import config, constants, demo_utils, models, pipeline, preprocessing as prepro, train_utils, util
+from src import config, constants, demo_utils, models, pipeline, train_utils, util
+from src.preprocessor import TextPreProcessor
 
-# Only use the amount of memory we require rather than the maximum
-if 'tensorflow' == K.backend():
-    import tensorflow as tf
-    from keras.backend.tensorflow_backend import set_session
-    config = tf.ConfigProto()
-    config.gpu_options.allow_growth = True
-    config.gpu_options.visible_device_list = "0"
-    set_session(tf.Session(config=config))
-
-module_path = os.path.abspath(os.path.join('./src/neural_backend'))
-
-print(module_path)
-
-if module_path not in sys.path:
-    sys.path.append(module_path)
-
-# Utility code.
-from src.util.load_data import load_data, get_data_sem_eval
-from src.util.load_embeddings import load_embeddings
-from src.models.layers.Attention import Attention as Attention
-from src.metrics import f1, precision, recall
-from src.util.preprocessor import TextPreProcessor
-
-from keras.layers import Input, Dense, Bidirectional, Dropout, LSTM, Embedding, SpatialDropout1D, GaussianNoise
-from keras.regularizers import l2
-from keras.optimizers import RMSprop
-from keras.models import Model
-from keras.preprocessing.sequence import pad_sequences
-
-from flask import Flask, json, request
-from flask_cors import CORS, cross_origin
-
-app = Flask(__name__)
-cors = CORS(app)
-app.config['CORS_HEADERS'] = 'Content-Type'
-
-MAX_FEATS = 150000
-
-# Paths to data sets
-sem_eval_path = './data/sem_eval/full/'
-custom = './data/custom/sem_eval_balanced_with_sent_140.csv'
-# Paths to glove embeddings.
-glove_path = './data/embeddings/glove.twitter.27B.200d.txt'
-embed_dims = 200
-embed_type = 'GLOVE'
-BATCH_SIZE = 128
-EPOCHS = 50
-LEARN_RATE = 0.001
-CLIP_NORM = 5.0
-NUM_CLASSES = 12
-RNN_UNITS = 200
-L2_REG = 0.0001
-SEQUENCE_LENGTH = 40
-
-preprocessor = TextPreProcessor()
-
-sem_eval = get_data_sem_eval(sem_eval_path)
-
-(x_train, y_train), (x_val, y_val), word_index, num_classes, lb, tokenizer = load_data(path=sem_eval_path,
-                                                                                       data_type='sem_eval',
-                                                                                       max_features=MAX_FEATS)
-
-# (x_train, y_train), (x_val, y_val), word_index, num_classes, lb, tokenizer = load_data(path=custom, max_features=MAX_FEATS)
-
-embedding_matrix = load_embeddings(path=glove_path,
-                                   embedding_type=embed_type,
-                                   word_index=word_index,
-                                   max_features=MAX_FEATS,
-                                   embedding_dimensions=embed_dims)
-
-vocab_size = len(word_index) + 1
-input_length = x_train.shape[1]
-embed_dim = embed_dims
-
-rnn_input = Input(shape=(input_length,))
-
-embedding = Embedding(vocab_size,
-                              embed_dim,
-                              weights=[embedding_matrix],
-                              input_length=input_length,
-                              name="embedding")(rnn_input)
-
-spatial_dropout_1 = SpatialDropout1D(0.3, name="spatial_dropout")(embedding)
-
-noise = GaussianNoise(0.2, name="noise")(spatial_dropout_1)
-
-bi_gru_1 = Bidirectional(LSTM(RNN_UNITS,
-                                           return_sequences=True,
-                                           recurrent_regularizer=l2(L2_REG),
-                                           kernel_regularizer=l2(L2_REG),
-                                           name="bi_gru_1"))(noise)
-
-bi_gru_1 = Dropout(0.3, name="bi_gru_1_dropout")(bi_gru_1)
-
-bi_gru_2 = Bidirectional(LSTM(RNN_UNITS,
-                                           return_sequences=True,
-                                           recurrent_regularizer=l2(L2_REG),
-                                           kernel_regularizer=l2(L2_REG),
-                                           name="bi_gru_2"))(bi_gru_1)
-
-bi_gru_2 = Dropout(0.3, name="bi_gru_2_dropout")(bi_gru_2)
-
-attention, weights = Attention(return_attention=True)(bi_gru_2)
-
-drop_1 = Dropout(0.5, name="attention_dropout")(attention)
-
-outputs = Dense(num_classes, activation='softmax', name="output")(drop_1)
-
-global model
-model = Model(inputs=rnn_input, outputs=[outputs, weights])
-
-model.compile(loss='categorical_crossentropy', optimizer=RMSprop(lr=LEARN_RATE, clipnorm=CLIP_NORM), metrics=[precision, recall, f1])
-
-model.load_weights('./model_checkpoints/BiLSTMAttention/BiLSTMAttention.hdf5')
-
-val_predictions = model.predict(x=x_val)
+API_VERSION = 1
 
 
-def predict(text):
-    origText = text
-    processed = preprocessor.preprocess(text)
-    # Number of cells used by this input
-    rel_cells = (SEQUENCE_LENGTH - len(processed.split()))
-    text = pad_sequences(tokenizer.texts_to_sequences([processed]), maxlen=SEQUENCE_LENGTH)
-    prediction, weights = model.predict(x=text)
-    pred_class = lb.inverse_transform(prediction)[0]
-    confidence = prediction[0][prediction.argmax(axis=-1)][0]
-    attn_weights = weights[0][rel_cells:]
+def demo(sess_config, params):
+    # Although bad practice, I don't want to force people to install unnecessary dependencies to run this repo.
+    from flask import Flask, json, request, send_from_directory
 
-    return {
-        "originalText": origText,
-        "processed": processed,
-        "classification": pred_class,
-        "confidence": float(confidence),
-        "attentionWeights": attn_weights.tolist(),
-    }
+    # TODO This is a mess and shouldn't be here but is neccessary for demo_ui development.
+    # Comes from https://gist.github.com/blixt/54d0a8bf9f64ce2ec6b8
+    def add_cors_headers(response):
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        if request.method == 'OPTIONS':
+            response.headers['Access-Control-Allow-Methods'] = 'DELETE, GET, POST, PUT'
+            headers = request.headers.get('Access-Control-Request-Headers')
+            if headers:
+                response.headers['Access-Control-Allow-Headers'] = headers
+        return response
+
+    app = Flask(__name__, static_folder=params.dist_dir)
+    app.after_request(add_cors_headers)
+
+    _, _, model_dir, _ = util.train_paths(params)
+    word_index_path, _, char_index_path = util.index_paths(params)
+    examples_path = util.examples_path(params)
+    embedding_paths = util.embedding_paths(params)
+    meta_path = util.meta_path(params)
+    classes_path = util.classes_path(params)
+
+    word_index = util.load_json(word_index_path)
+    char_index = util.load_json(char_index_path)
+    examples = util.load_json(examples_path)
+    meta = util.load_json(meta_path)
+    classes = util.load_json(classes_path)
+    classes = {value: key for key, value in classes.items()}
+
+    preprocessor = TextPreProcessor()
+    tokenizer = util.Tokenizer(lower=False,
+                               oov_token=params.oov_token,
+                               char_limit=params.char_limit,
+                               word_index=word_index,
+                               char_index=char_index,
+                               trainable_words=params.trainable_words,
+                               filters=None)
+
+    vocabs = util.load_vocab_files(paths=(word_index_path, char_index_path))
+    word_matrix, trainable_matrix, character_matrix = util.load_numpy_files(paths=embedding_paths)
+    tables = pipeline.create_lookup_tables(vocabs)
+    # Keep sess alive as long as the server is live, probably not best practice but it works @TODO Improve this.
+    sess = tf.Session(config=sess_config)
+    sess.run(tf.tables_initializer())
+
+    model = models.LSTMAttention(word_matrix, character_matrix, trainable_matrix, meta['num_classes'], params)
+    pipeline_placeholders = pipeline.create_placeholders()
+    demo_dataset, demo_iter = pipeline.create_demo_pipeline(params, tables, pipeline_placeholders)
+    demo_placeholders = demo_iter.get_next()
+    demo_inputs = train_utils.inputs_as_tuple(demo_placeholders)
+    logits, prediction, attn_weights = model(demo_inputs)
+
+    demo_outputs = [logits, prediction, attn_weights]
+    sess.run(tf.global_variables_initializer())
+
+    saver = train_utils.get_saver(ema_decay=params.ema_decay, ema_vars_only=True)
+    saver.restore(sess, tf.train.latest_checkpoint(model_dir))
+
+    @app.route('/api/v{0}/model/predict'.format(API_VERSION), methods=['POST'])
+    def process():
+        data = request.get_json()
+        text = preprocessor.preprocess(data['text'])
+        tokens = tokenizer.tokenize(text)
+        sess.run(demo_iter.initializer, feed_dict={
+            'tokens:0': np.array([tokens], dtype=np.str),
+            'num_tokens:0': np.array([len(tokens)], dtype=np.int32),
+        })
+
+        try:
+            _, probs, attn_out = sess.run(fetches=demo_outputs)
+            preds = [classes[np.argmax(prob)] for prob in probs.tolist()]
+            probs = probs.tolist()
+            attn_out = attn_out.tolist()
+        except tf.errors.OutOfRangeError:
+            # This in theory should never happen as we reset the iterator after each iteration and only run
+            # one batch but theories are frequently wrong.
+            raise RuntimeError('Iterator out of range, attempted to call too many times. (Please report this error)')
+
+        response = demo_utils.get_predict_response(tokens, probs, preds, attn_out)
+
+        return json.dumps(response)
+
+    @app.route('/api/v{0}/examples'.format(API_VERSION), methods=['GET'])
+    def get_example():
+        num_examples = int(request.args.get('numExamples'))
+        return json.dumps({
+            'numExamples': num_examples,
+            'data': [examples[i] for i in random.sample(range(len(examples)), k=num_examples)]
+        })
+
+    @app.route('/', defaults={'path': ''})
+    @app.route('/<path:path>')
+    def serve(path):
+        if path != '' and os.path.exists(params.dist_dir + path):
+            return send_from_directory(params.dist_dir, path)
+        else:
+            return send_from_directory(params.dist_dir, 'index.html')
+
+    return app
 
 
-@app.route('/status', methods=['GET'])
-@cross_origin()
-def status():
-    test = json.dumps([{
-        'connected': True
-    }])
-    return test
+if __name__ == '__main__':
+    defaults = util.namespace_json(path=constants.FilePaths.DEFAULTS)
+    model_config = config.model_config(defaults).FLAGS
+    app = demo(config.gpu_config(), model_config)
+    app.run(port=model_config.demo_server_port)
 
-
-@app.route('/tweets/train/sample', methods=['GET'])
-@cross_origin()
-def tweet_sample():
-    sample = sem_eval.sample(n=10)
-    test = sample.to_json()
-    return test
-
-
-@app.route('/tweets/process', methods=['POST'])
-@cross_origin()
-def process():
-    data = request.get_json()
-
-    respon = predict(data['text'])
-    return json.dumps([respon])

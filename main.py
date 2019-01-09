@@ -16,7 +16,8 @@ def main(sess_config, flags):
     elif mode == constants.Modes.PREPROCESS:
         preprocess(params)
     elif mode == constants.Modes.DEMO:
-        demo(sess_config, params)
+        app = demo(sess_config, params)
+        app.run(port=params.demo_server_port)
     else:
         print('Unknown Mode.')
         exit(0)
