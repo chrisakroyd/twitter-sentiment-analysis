@@ -41,13 +41,13 @@ class LSTMAttention(tf.keras.models.Model):
         rnn_2_out = self.rnn_2(rnn_1_out)
         rnn_2_out = self.drop_2(rnn_2_out, training=training)
 
-        attn_out = self.attention(rnn_2_out)
+        attn_out, attn_weights = self.attention(rnn_2_out, return_attention=True)
         attn_out = self.drop_3(attn_out, training=training)
 
         logits = self.out(attn_out)
         preds = self.preds(logits)
 
-        return logits, preds, attn_out
+        return logits, preds, attn_weights
 
     def compute_loss(self, logits, labels, l2=None):
         loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits, labels=labels)

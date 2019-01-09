@@ -11,7 +11,7 @@ def main(sess_config, flags):
 
     if mode == constants.Modes.TRAIN:
         train(sess_config, params)
-    if mode == constants.Modes.TEST:
+    elif mode == constants.Modes.TEST:
         test(sess_config, params)
     elif mode == constants.Modes.PREPROCESS:
         preprocess(params)
