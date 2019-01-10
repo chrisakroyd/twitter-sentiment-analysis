@@ -4,7 +4,7 @@ function preprocessTweets(rawTweets) {
   let tweets = [];
   if ('class' in rawTweets) {
     const ids = Object.keys(rawTweets.class);
-    const text = rawTweets.text;
+    const { text } = rawTweets;
     const classes = rawTweets.class;
     tweets = ids.map(id => ({
       tweetId: id,
@@ -29,12 +29,11 @@ const tweets = (state = {}, action) => {
         loading: false,
       };
     case TWEETS_FAILURE:
-      return {
-        tweets: state.tweets,
+      return Object.assign({}, state, {
         loading: false,
         errorCode: action.error_code,
         errorMessage: action.error_message,
-      };
+      });
     default:
       return state;
   }
