@@ -104,3 +104,15 @@ class EmbeddingTypes:
     def as_list():
         """ Returns a list of all supported embedding types """
         return [EmbeddingTypes.WORD, EmbeddingTypes.TRAINABLE, EmbeddingTypes.CHAR]
+
+
+class ErrorMessages:
+    """ Constant error messages.
+        The following keys are defined:
+        * NO_TEXT: Key for text missing.
+        * INVALID_TEXT: Text field is invalid.
+        * OUT_OF_RANGE_ERR: Internal error related to iterators running out of data.
+    """
+    NO_TEXT = 'Text key missing from body of POST request.'
+    INVALID_TEXT = 'Text must be longer than 0 excluding space characters.'
+    OUT_OF_RANGE_ERR = 'Iterator out of range, attempted to call too many times. (Please report this error)'

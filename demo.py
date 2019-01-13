@@ -7,6 +7,7 @@ from src import config, constants, demo_utils, models, pipeline, train_utils, ut
 from src.preprocessor import TextPreProcessor
 
 API_VERSION = 1
+BAD_REQUEST_CODE = 400
 
 
 def demo(sess_config, params):
@@ -34,11 +35,8 @@ def demo(sess_config, params):
     meta_path = util.meta_path(params)
     classes_path = util.classes_path(params)
 
-    word_index = util.load_json(word_index_path)
-    char_index = util.load_json(char_index_path)
-    examples = util.load_json(examples_path)
-    meta = util.load_json(meta_path)
-    classes = util.load_json(classes_path)
+    json_paths = (word_index_path, char_index_path, examples_path, meta_path, classes_path, )
+    word_index, char_index, examples, meta, classes = util.load_multiple_jsons(paths=json_paths)
     classes = {value: key for key, value in classes.items()}
 
     preprocessor = TextPreProcessor()
@@ -56,7 +54,7 @@ def demo(sess_config, params):
     # Keep sess alive as long as the server is live, probably not best practice but it works @TODO Improve this.
     sess = tf.Session(config=sess_config)
     sess.run(tf.tables_initializer())
-
+    # Initialise the model, pipelines + placeholders.
     model = models.LSTMAttention(word_matrix, character_matrix, trainable_matrix, meta['num_classes'], params)
     pipeline_placeholders = pipeline.create_placeholders()
     demo_dataset, demo_iter = pipeline.create_demo_pipeline(params, tables, pipeline_placeholders)
@@ -73,8 +71,18 @@ def demo(sess_config, params):
     @app.route('/api/v{0}/model/predict'.format(API_VERSION), methods=['POST'])
     def process():
         data = request.get_json()
+
+        if 'text' not in data:
+            return json.dumps(demo_utils.get_error_response(constants.ErrorMessages.NO_TEXT,
+                                                            data, error_code=1)), BAD_REQUEST_CODE
+
         text = preprocessor.preprocess(data['text'])
         tokens = tokenizer.tokenize(text)
+
+        if len(data['text']) <= 0 or len(tokens) <= 0:
+            return json.dumps(demo_utils.get_error_response(constants.ErrorMessages.INVALID_TEXT,
+                                                            data, error_code=2)), BAD_REQUEST_CODE
+
         sess.run(demo_iter.initializer, feed_dict={
             'tokens:0': np.array([tokens], dtype=np.str),
             'num_tokens:0': np.array([len(tokens)], dtype=np.int32),
@@ -88,9 +96,10 @@ def demo(sess_config, params):
         except tf.errors.OutOfRangeError:
             # This in theory should never happen as we reset the iterator after each iteration and only run
             # one batch but theories are frequently wrong.
-            raise RuntimeError('Iterator out of range, attempted to call too many times. (Please report this error)')
+            return json.dumps(demo_utils.get_error_response(constants.ErrorMessages.OUT_OF_RANGE_ERR,
+                                                            data, error_code=3)), BAD_REQUEST_CODE
 
-        response = demo_utils.get_predict_response(tokens, probs, preds, attn_out)
+        response = demo_utils.get_predict_response( tokens, probs, preds, attn_out, data)
 
         return json.dumps(response)
 
