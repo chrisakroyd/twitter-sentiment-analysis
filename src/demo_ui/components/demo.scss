@@ -3,11 +3,6 @@ $dash-body-margin: 30px 60px;
 $spinner-size: 60px;
 $sidebar-width: 100px;
 
-.dashboard {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-
   .loading-spinner-container {
     margin: $dash-body-margin;
     height: calc(100vh - 151px - 50px);
@@ -23,8 +18,13 @@ $sidebar-width: 100px;
   }
 
   .dash-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
     margin: $dash-body-margin;
     padding-left: $sidebar-width;
+
     .body-header {
       h1 {
         font-size: 48px;
@@ -69,11 +69,9 @@ $sidebar-width: 100px;
       }
     }
   }
-}
 
 .live {
   &.dash-body {
-
     .tall-container {
       display: flex;
       flex-direction: column;
@@ -104,10 +102,6 @@ $sidebar-width: 100px;
 
     .tile-row {
       .large-tile {
-        width: calc(66% - 15px);
-        margin: 0 40px 0 40px;
-        height: 800px;
-
         .tile-body {
           flex-direction: column;
           margin-top: 20px;
@@ -118,8 +112,6 @@ $sidebar-width: 100px;
               margin-top: 0;
             }
           }
-
-
 
           .enter-text-row {
             display:flex;
@@ -141,6 +133,10 @@ $sidebar-width: 100px;
 
           .text-block {
             width: 800px;
+
+            &:last-child {
+              margin-bottom: 30px;
+            }
           }
 
           .classification-container {

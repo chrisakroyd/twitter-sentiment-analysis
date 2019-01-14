@@ -6,15 +6,17 @@ import './demo.scss';
 
 import InputBar from './InputBar/InputBar';
 import SearchButton from './SearchButton/SearchButton';
-import AnnotatedHighlight from './AnnotatedHighlight/AnnotatedHighlight';
 import WordHeat from './WordHeat/WordHeat';
 import ConfidenceGauge from './ConfidenceGauge/ConfidenceGauge';
 
-import tweetShape from '../prop-shapes/tweetShape';
 
-const Demo = ({ process, setText, activeText, tweets }) => {
-  const textLabel = activeText.classification.toLowerCase();
-  const classificationClass = classNames({ positive: textLabel === 'positive', negative: textLabel === 'negative' });
+const Demo = ({ process, setText, predictions }) => {
+  const textLabel = predictions.label.toLowerCase();
+  const classificationClass = classNames({
+    positive: textLabel === 'positive',
+    negative: textLabel === 'negative',
+    neutral: textLabel === 'neutral',
+  });
 
   return (
     <div className="live dash-body">
@@ -25,27 +27,19 @@ const Demo = ({ process, setText, activeText, tweets }) => {
       <div className="tile-row">
         <div className="tile large-tile">
           <div className="tile-header">
-            <h3>Demo</h3>
+            <h1>Demo</h1>
           </div>
           <div className="tile-body">
             <h4>1. Enter Text</h4>
             <div className="enter-text-row">
               <InputBar
                 onEnter={process}
-                value={activeText.text}
+                value={predictions.text}
                 onKeyPress={setText}
               />
               <div>
-                <SearchButton onEnter={process}/>
+                <SearchButton onEnter={process} />
               </div>
-            </div>
-            <div className="text-block">
-              <h4>2. Processed Text</h4>
-              <p>Before being run through the neural network, the text entered above is processed,
-                annotated and tokenized. Annotated words are displayed in
-                <div className="colour-word">this colour</div>.
-              </p>
-              <AnnotatedHighlight words={activeText.processed}/>
             </div>
             <div className="text-block">
               <h4>3. Attention, Classification and Confidence</h4>
@@ -57,8 +51,8 @@ const Demo = ({ process, setText, activeText, tweets }) => {
                 The strength of the colour reflects the strength of its impact.
               </p>
               <WordHeat
-                words={activeText.processed}
-                scores={activeText.attentionWeights}
+                tokens={predictions.tokens}
+                scores={predictions.attentionWeights}
               />
               <div className="classification-container">
                 <div>
@@ -66,12 +60,11 @@ const Demo = ({ process, setText, activeText, tweets }) => {
                   <span
                     className={classificationClass}
                   >
-                    {activeText.classification}
+                    {predictions.label}
                   </span>
                 </div>
-                <ConfidenceGauge confidence={activeText.confidence}/>
+                <ConfidenceGauge probs={predictions.probs[0]} />
               </div>
-
             </div>
           </div>
         </div>
@@ -85,15 +78,12 @@ Demo.propTypes = {
   process: PropTypes.func.isRequired,
   setText: PropTypes.func.isRequired,
   // Data
-  activeText: PropTypes.shape({
+  predictions: PropTypes.shape({
     text: PropTypes.string.isRequired,
-    processed: PropTypes.string.isRequired,
+    tokens: PropTypes.arrayOf(PropTypes.string).isRequired,
     attentionWeights: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
-    classification: PropTypes.string.isRequired,
-    confidence: PropTypes.number.isRequired,
-  }).isRequired,
-  tweets: PropTypes.shape({
-    tweets: PropTypes.arrayOf(tweetShape).isRequired,
+    label: PropTypes.string.isRequired,
+    probs: PropTypes.arrayOf(PropTypes.number).isRequired,
   }).isRequired,
 };
 

@@ -13,10 +13,9 @@ const interpolate = interpolateHcl(lowColour, highColour);
 
 class WordHeat extends React.Component {
   generateWordComponents() {
-    const splitWords = this.props.words.split(' ');
     const scores = this.props.scores;
 
-    return splitWords.map((word, i) =>
+    return this.props.tokens.map((word, i) =>
       (
         <li
           key={shortid.generate()}
@@ -40,7 +39,7 @@ class WordHeat extends React.Component {
 }
 
 WordHeat.propTypes = {
-  words: PropTypes.string.isRequired,
+  tokens: PropTypes.arrayOf(PropTypes.string).isRequired,
   scores: PropTypes.arrayOf(PropTypes.number).isRequired,
 };
 

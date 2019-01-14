@@ -2,15 +2,14 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 
 // Actions
-import { getPrediction, getTweets } from '../actions/compositeActions';
-import { setInputText } from '../actions/textInputActions';
+import { getPrediction, getTweets, setText } from '../actions/compositeActions';
 import Demo from '../components/Demo';
 
 
 const mapStateToProps = state =>
   ({
     tweets: state.tweets,
-    activeText: state.activeText,
+    predictions: state.predictions,
     status: state.status,
   });
 
@@ -23,7 +22,7 @@ const mapDispatchToProps = dispatch => ({
     dispatch(getPrediction());
   },
   setText: (text) => {
-    dispatch(setInputText(text));
+    dispatch(setText(text));
   },
 });
 

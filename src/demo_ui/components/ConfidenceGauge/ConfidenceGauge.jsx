@@ -6,13 +6,13 @@ import './confidence-gauge.scss';
 
 const interpolateLin = interpolate(0.0, 100.0);
 
-const ConfidenceGauge = ({ confidence }) => {
-  const confidenceWidth = { width: `${interpolateLin(confidence)}%` };
+const ConfidenceGauge = ({ probs }) => {
+  const confidenceWidth = { width: `${interpolateLin(probs)}%` };
   let level = 'Low';
 
-  if (confidence > 0.33 && confidence < 0.66) {
+  if (probs > 0.33 && probs < 0.66) {
     level = 'Medium';
-  } else if (confidence > 0.66) {
+  } else if (probs > 0.66) {
     level = 'High';
   }
 
@@ -25,7 +25,7 @@ const ConfidenceGauge = ({ confidence }) => {
 };
 
 ConfidenceGauge.propTypes = {
-  confidence: PropTypes.number.isRequired,
+  probs: PropTypes.number.isRequired,
 };
 
 export default ConfidenceGauge;
