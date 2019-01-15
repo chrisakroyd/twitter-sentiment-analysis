@@ -1,9 +1,12 @@
+// Action for resetting error state.
+export const CLEAR_ERROR = 'CLEAR_ERROR';
+
 // Actions for loading a random sample of tweets
-export const TWEETS = 'TWEETS';
+export const EXAMPLES = 'EXAMPLES';
 
-export const TWEETS_SUCCESS = 'TWEETS_SUCCESS';
+export const EXAMPLES_SUCCESS = 'EXAMPLES_SUCCESS';
 
-export const TWEETS_FAILURE = 'TWEETS_FAILURE';
+export const EXAMPLES_FAILURE = 'EXAMPLES_FAILURE';
 
 // Actions for processing a tweet
 export const PREDICT = 'PREDICT';

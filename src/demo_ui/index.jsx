@@ -6,10 +6,8 @@ import thunk from 'redux-thunk';
 
 import { getTweets } from './actions/compositeActions';
 
-import searchApp from './reducers';
+import sentimentDemo from './reducers';
 import Root from './components/Root';
-import { tweets } from './constants/defaults';
-
 
 import './index.scss';
 import createHashHistory from 'history/createHashHistory';
@@ -34,22 +32,19 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 const reducers = combineReducers({
-  ...searchApp,
+  ...sentimentDemo,
   router: routerReducer,
 });
 
 const defaultState = {
-  activeText: {
+  predictions: {
     text: 'Hey @_ChrisAkroyd_, I like you, check this out http://bbc.co.uk',
-    processed: 'Hey <user> , I like you , check this out <url>',
+    tokens: ['Hey', '<user>', 'I', 'like', 'you', ',', 'check', 'this', 'out', '<url>'],
     attentionWeights: [0.046337228268384933, 0.05221894010901451, 0.0850118100643158, 0.09090767055749893, 0.07975268363952637, 0.05724440887570381, 0.03628542646765709, 0.047189291566610336, 0.06301657110452652, 0.03931921720504761, 0.021808134391903877],
-    classification: 'Positive',
-    confidence: 0.89,
+    label: 'Positive',
+    probs: [0.89, 0.06, 0.05],
     loading: false,
-  },
-  tweets: {
-    loading: false,
-    tweets,
+    error: null,
   },
 };
 

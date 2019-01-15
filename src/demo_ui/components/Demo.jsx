@@ -4,11 +4,11 @@ import classNames from 'classnames';
 
 import './demo.scss';
 
-import InputBar from './InputBar/InputBar';
-import SearchButton from './SearchButton/SearchButton';
 import WordHeat from './WordHeat/WordHeat';
 import ConfidenceGauge from './ConfidenceGauge/ConfidenceGauge';
 
+import Button from './common/Button';
+import InputBar from './common/InputBar';
 
 const Demo = ({ process, setText, predictions }) => {
   const textLabel = predictions.label.toLowerCase();
@@ -19,7 +19,7 @@ const Demo = ({ process, setText, predictions }) => {
   });
 
   return (
-    <div className="live dash-body">
+    <div className="dash-body">
       <div className="body-header">
         <h1>Demo</h1>
       </div>
@@ -35,14 +35,13 @@ const Demo = ({ process, setText, predictions }) => {
               <InputBar
                 onEnter={process}
                 value={predictions.text}
+                placeholder="Enter text here"
                 onKeyPress={setText}
               />
-              <div>
-                <SearchButton onEnter={process} />
-              </div>
+              <Button onClick={process} label="Predict" />
             </div>
             <div className="text-block">
-              <h4>3. Attention, Classification and Confidence</h4>
+              <h4>2. Attention and Classification</h4>
               <p>
                 Attention is a technique which focuses on the most pertinent information
                 within the input and calculates a per-word relevance score. Below is a
