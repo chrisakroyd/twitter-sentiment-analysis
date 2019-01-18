@@ -110,9 +110,11 @@ class ErrorMessages:
     """ Constant error messages.
         The following keys are defined:
         * NO_TEXT: Key for text missing.
+        * NO_TOKENS: Key for tokens missing.
         * INVALID_TEXT: Text field is invalid.
-        * OUT_OF_RANGE_ERR: Internal error related to iterators running out of data.
+        * INVALID_TOKENS: Tokens field is invalid.
     """
     NO_TEXT = 'Text key missing from body of POST request.'
+    NO_TOKENS = 'Text key missing from body of POST request.'
     INVALID_TEXT = 'Text must be longer than 0 excluding space characters.'
-    OUT_OF_RANGE_ERR = 'Iterator out of range, attempted to call too many times. (Please report this error)'
+    INVALID_TOKENS = 'Text must be longer than 0 excluding space characters.'

@@ -1,3 +1,8 @@
+def get_params(data, keys={'text', 'tokens'}):
+    """ Creates dict of params from request restricted to a set of allowed keys."""
+    return {key: data[key] for key in keys if key in data}
+
+
 def get_predict_response(tokens, probs, preds, attn_out, orig_body):
     """
         Given tokens, probs, preds and attention weights generates a json formatted response body.
@@ -29,9 +34,7 @@ def get_predict_response(tokens, probs, preds, attn_out, orig_body):
     return {
         'numPredictions': len(preds),
         'data': data,
-        'parameters': {
-            'text': orig_body['text'],
-        }
+        'parameters': get_params(orig_body)
     }
 
 
@@ -45,14 +48,8 @@ def get_error_response(error_message, orig_body, error_code=0):
         Returns:
             Error dict for the response.
     """
-
-    params = {}
-
-    if 'text' in orig_body:
-        params['text'] = orig_body['text']
-
     return {
         'errorCode': error_code,
         'errorMessage': error_message,
-        'parameters': params
+        'parameters': get_params(orig_body)
     }

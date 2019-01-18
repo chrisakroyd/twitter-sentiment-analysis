@@ -37,7 +37,7 @@ def demo(sess_config, params):
 
     json_paths = (word_index_path, char_index_path, examples_path, meta_path, classes_path, )
     word_index, char_index, examples, meta, classes = util.load_multiple_jsons(paths=json_paths)
-    classes = {value: key for key, value in classes.items()}
+    reverse_classes = {value: key for key, value in classes.items()}
 
     preprocessor = TextPreProcessor()
     tokenizer = util.Tokenizer(lower=False,
@@ -69,7 +69,7 @@ def demo(sess_config, params):
     saver.restore(sess, tf.train.latest_checkpoint(model_dir))
 
     @app.route('/api/v{0}/model/predict'.format(API_VERSION), methods=['POST'])
-    def process():
+    def predict():
         data = request.get_json()
 
         if 'text' not in data:
@@ -83,25 +83,34 @@ def demo(sess_config, params):
             return json.dumps(demo_utils.get_error_response(constants.ErrorMessages.INVALID_TEXT,
                                                             data, error_code=2)), BAD_REQUEST_CODE
 
+        return json.dumps(process(tokens, data))
+
+    @app.route('/api/v{0}/model/predictTokens'.format(API_VERSION), methods=['POST'])
+    def predict_tokens():
+        data = request.get_json()
+
+        if 'tokens' not in data:
+            return json.dumps(demo_utils.get_error_response(constants.ErrorMessages.NO_TOKENS,
+                                                            data, error_code=3)), BAD_REQUEST_CODE
+
+        tokens = data['tokens']
+
+        if len(tokens) <= 0:
+            return json.dumps(demo_utils.get_error_response(constants.ErrorMessages.INVALID_TOKENS,
+                                                            data, error_code=4)), BAD_REQUEST_CODE
+
+        return json.dumps(process(tokens, data))
+
+    def process(tokens, data):
         sess.run(demo_iter.initializer, feed_dict={
             'tokens:0': np.array([tokens], dtype=np.str),
             'num_tokens:0': np.array([len(tokens)], dtype=np.int32),
         })
-
-        try:
-            _, probs, attn_out = sess.run(fetches=demo_outputs)
-            preds = [classes[np.argmax(prob)] for prob in probs.tolist()]
-            probs = probs.tolist()
-            attn_out = attn_out.tolist()
-        except tf.errors.OutOfRangeError:
-            # This in theory should never happen as we reset the iterator after each iteration and only run
-            # one batch but theories are frequently wrong.
-            return json.dumps(demo_utils.get_error_response(constants.ErrorMessages.OUT_OF_RANGE_ERR,
-                                                            data, error_code=3)), BAD_REQUEST_CODE
-
-        response = demo_utils.get_predict_response( tokens, probs, preds, attn_out, data)
-
-        return json.dumps(response)
+        _, probs, attn_out = sess.run(fetches=demo_outputs)
+        preds = [reverse_classes[np.argmax(prob)] for prob in probs.tolist()]
+        probs = probs.tolist()
+        attn_out = attn_out.tolist()
+        return demo_utils.get_predict_response(tokens, probs, preds, attn_out, data)
 
     @app.route('/api/v{0}/examples'.format(API_VERSION), methods=['GET'])
     def get_example():
@@ -109,6 +118,14 @@ def demo(sess_config, params):
         return json.dumps({
             'numExamples': num_examples,
             'data': [examples[i] for i in random.sample(range(len(examples)), k=num_examples)]
+        })
+
+    @app.route('/api/v{0}/classes'.format(API_VERSION), methods=['GET'])
+    def get_classes():
+        num_classes = len(classes)
+        return json.dumps({
+            'numClasses': num_classes,
+            'classes': classes,
         })
 
     @app.route('/', defaults={'path': ''})
