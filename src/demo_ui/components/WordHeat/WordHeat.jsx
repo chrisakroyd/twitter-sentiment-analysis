@@ -13,26 +13,26 @@ const interpolate = interpolateHcl(lowColour, highColour);
 
 class WordHeat extends React.Component {
   generateWordComponents() {
-    const scores = this.props.scores;
+    const { scores } = this.props;
 
     return this.props.tokens.map((word, i) =>
       (
-        <li
+        <div
           key={shortid.generate()}
           className="heat-word"
           style={({ backgroundColor: interpolate(scores[i] * 15) })}
         >
           {word}
-        </li>));
+        </div>));
   }
 
 
   render() {
     return (
       <div className="word-heat">
-        <ul className="heat-word-list">
+        <div className="heat-word-list">
           {this.generateWordComponents()}
-        </ul>
+        </div>
       </div>
     );
   }

@@ -5,14 +5,14 @@ import classNames from 'classnames';
 import './demo.scss';
 
 import WordHeat from './WordHeat/WordHeat';
-import ConfidenceGauge from './ConfidenceGauge/ConfidenceGauge';
+import Donut from './Donut/Donut';
 
 import Button from './common/Button';
 import InputBar from './common/InputBar';
 
 const Demo = ({ process, setText, predictions }) => {
   const textLabel = predictions.label.toLowerCase();
-  const classificationClass = classNames({
+  const classificationClass = classNames('label-header', {
     positive: textLabel === 'positive',
     negative: textLabel === 'negative',
     neutral: textLabel === 'neutral',
@@ -23,7 +23,6 @@ const Demo = ({ process, setText, predictions }) => {
       <div className="body-header">
         <h1>Demo</h1>
       </div>
-
       <div className="tile-row">
         <div className="tile large-tile">
           <div className="tile-header">
@@ -54,15 +53,11 @@ const Demo = ({ process, setText, predictions }) => {
                 scores={predictions.attentionWeights}
               />
               <div className="classification-container">
-                <div>
-                  <span>Classification: </span>
-                  <span
-                    className={classificationClass}
-                  >
-                    {predictions.label}
-                  </span>
+                <Donut probs={predictions.probs} />
+                <div className="label-container">
+                  <h3>We think this text is...</h3>
+                  <h2 className={classificationClass}>{predictions.label}</h2>
                 </div>
-                <ConfidenceGauge probs={predictions.probs[0]} />
               </div>
             </div>
           </div>

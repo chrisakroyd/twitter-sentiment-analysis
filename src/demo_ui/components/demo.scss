@@ -2,6 +2,21 @@ $margin: 45px;
 $dash-body-margin: 30px 60px;
 $spinner-size: 60px;
 $sidebar-width: 100px;
+$green-colour: #5fcf80;
+$neutral-colour: grey;
+$red-colour: #FF6666;
+
+
+svg {
+  overflow: visible;
+  margin-top: 20px;
+
+  polyline {
+    opacity: 0.5;
+    stroke-width: 2px;
+    fill: none;
+  }
+}
 
 .loading-spinner-container {
   margin: $dash-body-margin;
@@ -145,10 +160,33 @@ $sidebar-width: 100px;
 
         .classification-container {
           display: flex;
-          flex-direction: column;
+          flex-direction: row;
 
-          span:first-child {
-            font-weight: bold;
+          .label-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding-bottom: 25px;
+
+            h3 {
+              margin: 0;
+            }
+
+            .label-header {
+              margin: 5px 0 0 0;
+
+              &.positive {
+                color: $green-colour;
+              }
+
+              &.neutral {
+                color: $neutral-colour;
+              }
+
+              &.negative {
+                color: $red-colour;
+              }
+            }
           }
         }
       }
