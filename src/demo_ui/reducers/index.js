@@ -1,4 +1,4 @@
-import tweets from './tweets';
-import activeText from './activeText';
+import text from './text';
+import predictions from './predictions';
 
-export default { tweets, activeText };
+export default { text, predictions };

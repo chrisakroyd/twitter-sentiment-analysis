@@ -8,6 +8,8 @@ export const EXAMPLES_SUCCESS = 'EXAMPLES_SUCCESS';
 
 export const EXAMPLES_FAILURE = 'EXAMPLES_FAILURE';
 
+export const SET_INPUT_TEXT = 'SET_INPUT_TEXT';
+
 // Actions for processing a tweet
 export const PREDICT = 'PREDICT';
 
@@ -15,4 +17,10 @@ export const PREDICT_SUCCESS = 'PREDICT_SUCCESS';
 
 export const PREDICT_FAILURE = 'PREDICT_FAILURE';
 
-export const SET_INPUT_TEXT = 'SET_INPUT_TEXT';
+export const PREDICT_TOKENS = 'PREDICT_TOKENS';
+
+export const PREDICT_TOKENS_SUCCESS = 'PREDICT_TOKENS_SUCCESS';
+
+export const PREDICT_TOKENS_FAILURE = 'PREDICT_TOKENS_FAILURE';
+
+export const TOGGLE_TOKEN = 'TOGGLE_TOKEN';
