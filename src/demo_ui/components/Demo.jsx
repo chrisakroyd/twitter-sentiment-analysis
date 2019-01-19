@@ -10,7 +10,7 @@ import Donut from './Donut/Donut';
 import Button from './common/Button';
 import InputBar from './common/InputBar';
 
-const Demo = ({ process, setText, predictions }) => {
+const Demo = ({ process, toggleToken, setText, predictions, text }) => {
   const textLabel = predictions.label.toLowerCase();
   const classificationClass = classNames('label-header', {
     positive: textLabel === 'positive',
@@ -33,7 +33,7 @@ const Demo = ({ process, setText, predictions }) => {
             <div className="enter-text-row">
               <InputBar
                 onEnter={process}
-                value={predictions.text}
+                value={text.text}
                 placeholder="Enter text here"
                 onKeyPress={setText}
               />
@@ -49,7 +49,9 @@ const Demo = ({ process, setText, predictions }) => {
                 The strength of the colour reflects the strength of its impact.
               </p>
               <WordHeat
+                onClick={toggleToken}
                 tokens={predictions.tokens}
+                enabled={predictions.enabled}
                 scores={predictions.attentionWeights}
               />
               <div className="classification-container">
@@ -70,14 +72,18 @@ const Demo = ({ process, setText, predictions }) => {
 Demo.propTypes = {
   // Functions
   process: PropTypes.func.isRequired,
+  toggleToken: PropTypes.func.isRequired,
   setText: PropTypes.func.isRequired,
   // Data
   predictions: PropTypes.shape({
-    text: PropTypes.string.isRequired,
     tokens: PropTypes.arrayOf(PropTypes.string).isRequired,
+    enabled: PropTypes.arrayOf(PropTypes.bool).isRequired,
     attentionWeights: PropTypes.arrayOf(PropTypes.number.isRequired).isRequired,
     label: PropTypes.string.isRequired,
     probs: PropTypes.arrayOf(PropTypes.number).isRequired,
+  }).isRequired,
+  text: PropTypes.shape({
+    text: PropTypes.string.isRequired,
   }).isRequired,
 };
 

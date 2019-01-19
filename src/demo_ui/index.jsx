@@ -4,8 +4,6 @@ import { createStore, applyMiddleware, combineReducers } from 'redux';
 import { routerMiddleware, routerReducer } from 'react-router-redux';
 import thunk from 'redux-thunk';
 
-import { getExample } from './actions/compositeActions';
-
 import sentimentDemo from './reducers';
 import Root from './components/Root';
 
@@ -56,8 +54,6 @@ const store = createStore(
   defaultState,
   middleware,
 );
-
-// store.dispatch(getExample());
 
 render(
   <Root store={store} history={history} />,

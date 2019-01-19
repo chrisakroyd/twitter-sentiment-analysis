@@ -55,11 +55,17 @@ export function setText(text) {
 
 export function predictWithTokens() {
   return (dispatch, getState) => {
-    const active = getState().predictions;
+    const { predictions } = getState();
+    const tokens = [];
+    predictions.enabled.forEach((flag, i) => {
+      if (flag) {
+        tokens.push(predictions.tokens[i]);
+      }
+    });
 
     dispatch(predictTokens());
 
-    return axios.post(`${demoUrl}/api/v1/model/predictTokens`, { tokens: active.tokens })
+    return axios.post(`${demoUrl}/api/v1/model/predictTokens`, { tokens })
       .then(res => dispatch(predictTokensSuccess(res.data)))
       .catch(err => dispatch(predictTokensFailure(err)));
   };

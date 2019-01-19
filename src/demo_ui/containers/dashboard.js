@@ -2,24 +2,28 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router-dom';
 
 // Actions
-import { getPrediction, getTweets, setText } from '../actions/compositeActions';
+import { getPrediction, predictWithTokens, getExample, setText } from '../actions/compositeActions';
+import { toggleToken } from '../actions/predictActions';
 import Demo from '../components/Demo';
 
 
 const mapStateToProps = state =>
   ({
-    tweets: state.tweets,
+    text: state.text,
     predictions: state.predictions,
-    status: state.status,
   });
 
 const mapDispatchToProps = dispatch => ({
-  tweetRefresh: () => {
-    dispatch(getTweets());
+  loadExample: () => {
+    dispatch(getExample());
   },
   process: () => {
     console.log('process');
     dispatch(getPrediction());
+  },
+  toggleToken: (index) => {
+    dispatch(toggleToken(index));
+    dispatch(predictWithTokens());
   },
   setText: (text) => {
     dispatch(setText(text));

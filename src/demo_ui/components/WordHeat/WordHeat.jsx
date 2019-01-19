@@ -1,29 +1,36 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import classNames from 'classnames';
 import shortid from 'shortid';
 
 import { interpolateHcl } from 'd3-interpolate';
 import './word-heat.scss';
 
 const highColour = '#ff6d77';
-// const lowColour = '#fe9f60';
 const lowColour = '#f2e5f1';
 
 const interpolate = interpolateHcl(lowColour, highColour);
 
 class WordHeat extends React.Component {
   generateWordComponents() {
-    const { scores } = this.props;
+    const { scores, onClick, enabled } = this.props;
 
-    return this.props.tokens.map((word, i) =>
-      (
+    return this.props.tokens.map((word, i) => {
+      const style = {};
+      if (enabled[i]) {
+        style.backgroundColor = interpolate(scores[i] * 15);
+      }
+      return (
         <div
           key={shortid.generate()}
-          className="heat-word"
-          style={({ backgroundColor: interpolate(scores[i] * 15) })}
+          role="button"
+          className={classNames('heat-word', { enabled: enabled[i] })}
+          onClick={() => onClick(i)}
+          style={style}
         >
           {word}
-        </div>));
+        </div>);
+    });
   }
 
 
@@ -39,7 +46,9 @@ class WordHeat extends React.Component {
 }
 
 WordHeat.propTypes = {
+  onClick: PropTypes.func.isRequired,
   tokens: PropTypes.arrayOf(PropTypes.string).isRequired,
+  enabled: PropTypes.arrayOf(PropTypes.bool).isRequired,
   scores: PropTypes.arrayOf(PropTypes.number).isRequired,
 };
 
