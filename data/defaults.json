@@ -1,7 +1,7 @@
 {
   "mode": "train",
   "dataset": "sem_eval",
-  "run_name": "cakroyd_qanet",
+  "run_name": "cakroyd_twitter_sentiment",
   "embeddings_path": "E:/data_sets/glove/glove.840B.300d.txt",
   "data_dir": "./data/",
   "dist_dir": "./dist",
@@ -16,7 +16,9 @@
   "max_chars": 2500,
   "oov_token": "<OOV>",
   "trainable_words": [
-    "<OOV>"
+    "<OOV>", "<hashtag>", "<allcaps>", "</hashtag>", "<smile>", "<lolface>", "<neutralface>", "<kisses>",
+    "<ip>", "<url>", "<email>", "<user>", "<date>", "<time>", "<currency>", "<percent>", "<score>", "<repeat>",
+    "<elong>", "<heart>", "<number>", "<empty>"
   ],
   "min_words": -1,
   "min_chars": -1,

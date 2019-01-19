@@ -105,7 +105,6 @@ def process(params, data, print_classes=True):
                                vocab=vocab,
                                lower=False,
                                oov_token=params.oov_token,
-                               char_limit=params.char_limit,
                                min_word_occurrence=params.min_word_occur,
                                min_char_occurrence=params.min_char_occur,
                                trainable_words=params.trainable_words,
