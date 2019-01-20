@@ -124,7 +124,8 @@ def demo(sess_config, params):
         num_classes = len(classes)
         return json.dumps({
             'numClasses': num_classes,
-            'classes': classes,
+            'classes': reverse_classes,
+        
         })
 
     @app.route('/', defaults={'path': ''})

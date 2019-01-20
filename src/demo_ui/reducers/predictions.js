@@ -35,7 +35,6 @@ const predictions = (state = {}, action) => {
     }
     case PREDICT_TOKENS: {
       return Object.assign({}, state, {
-        loading: true,
         error: null,
       });
     }
@@ -57,7 +56,6 @@ const predictions = (state = {}, action) => {
         attentionWeights: newWeights,
         label: prediction.label,
         probs: prediction.probs,
-        loading: false,
       });
     }
     case TOGGLE_TOKEN: {

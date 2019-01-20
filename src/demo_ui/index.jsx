@@ -4,6 +4,7 @@ import { createStore, applyMiddleware, combineReducers } from 'redux';
 import { routerMiddleware, routerReducer } from 'react-router-redux';
 import thunk from 'redux-thunk';
 
+import { loadClasses } from './actions/compositeActions';
 import sentimentDemo from './reducers';
 import Root from './components/Root';
 
@@ -44,6 +45,7 @@ const defaultState = {
   },
   text: {
     text: 'Hey @_ChrisAkroyd_, I like you, check this out http://bbc.co.uk',
+    classes: { 0: 'neutral', 1: 'negative', 2: 'positive' },
     loading: false,
     error: null,
   },
@@ -54,6 +56,8 @@ const store = createStore(
   defaultState,
   middleware,
 );
+
+store.dispatch(loadClasses());
 
 render(
   <Root store={store} history={history} />,

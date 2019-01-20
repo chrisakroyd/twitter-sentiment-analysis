@@ -8,6 +8,12 @@ export const EXAMPLES_SUCCESS = 'EXAMPLES_SUCCESS';
 
 export const EXAMPLES_FAILURE = 'EXAMPLES_FAILURE';
 
+export const CLASSES = 'CLASSES';
+
+export const CLASSES_SUCCESS = 'CLASSES_SUCCESS';
+
+export const CLASSES_FAILURE = 'CLASSES_FAILURE';
+
 export const SET_INPUT_TEXT = 'SET_INPUT_TEXT';
 
 // Actions for processing a tweet

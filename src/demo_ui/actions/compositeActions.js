@@ -1,7 +1,9 @@
 import axios from 'axios';
 
 import config from '../config';
-import { examples, examplesSuccess, examplesFailure, setInputText } from './textActions';
+
+import { examples, examplesSuccess, examplesFailure, classes, classesSuccess, classesFailure, setInputText } from './textActions';
+
 import {
   predict, predictTokens, predictSuccess, predictTokensSuccess,
   predictFailure, predictTokensFailure, clearError,
@@ -18,17 +20,6 @@ function isErrorFixed(error, text) {
   return isFixed;
 }
 
-
-export function getExample() {
-  return (dispatch) => {
-    dispatch(examples());
-    return axios.get(`${demoUrl}/api/v1/examples`, { params: { numExamples: 1 } })
-      .then(res => dispatch(examplesSuccess(res.data)))
-      .catch(err => dispatch(examplesFailure(err)));
-  };
-}
-
-
 export function getPrediction() {
   return (dispatch, getState) => {
     const { text } = getState();
@@ -38,6 +29,16 @@ export function getPrediction() {
     return axios.post(`${demoUrl}/api/v1/model/predict`, { text: text.text })
       .then(res => dispatch(predictSuccess(res.data)))
       .catch(err => dispatch(predictFailure(err)));
+  };
+}
+
+export function getExample() {
+  return (dispatch) => {
+    dispatch(examples());
+    return axios.get(`${demoUrl}/api/v1/examples`, { params: { numExamples: 1 } })
+      .then(res => dispatch(examplesSuccess(res.data)))
+      .then(() => dispatch(getPrediction()))
+      .catch(err => dispatch(examplesFailure(err)));
   };
 }
 
@@ -68,5 +69,14 @@ export function predictWithTokens() {
     return axios.post(`${demoUrl}/api/v1/model/predictTokens`, { tokens })
       .then(res => dispatch(predictTokensSuccess(res.data)))
       .catch(err => dispatch(predictTokensFailure(err)));
+  };
+}
+
+export function loadClasses() {
+  return (dispatch) => {
+    dispatch(classes());
+    return axios.get(`${demoUrl}/api/v1/classes`)
+      .then(res => dispatch(classesSuccess(res.data)))
+      .catch(err => dispatch(classesFailure(err)));
   };
 }

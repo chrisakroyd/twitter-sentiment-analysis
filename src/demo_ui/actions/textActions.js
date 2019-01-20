@@ -1,4 +1,4 @@
-import { EXAMPLES, EXAMPLES_SUCCESS, EXAMPLES_FAILURE, SET_INPUT_TEXT } from '../constants/actions';
+import { CLASSES, CLASSES_SUCCESS, CLASSES_FAILURE, EXAMPLES, EXAMPLES_SUCCESS, EXAMPLES_FAILURE, SET_INPUT_TEXT } from '../constants/actions';
 
 export function setInputText(text) {
   return {
@@ -24,6 +24,26 @@ export function examplesSuccess(data) {
 export function examplesFailure(error) {
   return {
     type: EXAMPLES_FAILURE,
+    error,
+  };
+}
+
+export function classes() {
+  return {
+    type: CLASSES,
+  };
+}
+
+export function classesSuccess(data) {
+  return {
+    type: CLASSES_SUCCESS,
+    classes: data.classes,
+  };
+}
+
+export function classesFailure(error) {
+  return {
+    type: CLASSES_FAILURE,
     error,
   };
 }
