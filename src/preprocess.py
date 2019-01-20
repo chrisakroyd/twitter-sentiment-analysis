@@ -33,7 +33,7 @@ def fit_and_extract(data_set, tokenizer, classes, params):
 
         if 0 < num_tokens < params.max_tokens:
             tweets.append({
-                'text': tweet_text,
+                'text': tweet['text'],
                 'tokens': tweet_tokens,
                 'num_tokens': num_tokens,
                 'label': classes[tweet['class']],

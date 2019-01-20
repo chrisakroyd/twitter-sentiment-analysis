@@ -1,6 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
+
+import RefreshButton from './RefreshButton';
 import './inputs.scss';
 
 
@@ -37,6 +39,7 @@ class InputBar extends React.Component {
           value={this.props.value}
           ref={(input) => { this.textInput = input; }}
         />
+        <RefreshButton onClick={() => this.props.onRefresh()} />
       </div>
     );
   }
@@ -45,6 +48,7 @@ class InputBar extends React.Component {
 InputBar.propTypes = {
   onKeyPress: PropTypes.func.isRequired,
   onEnter: PropTypes.func,
+  onRefresh: PropTypes.func.isRequired,
   placeholder: PropTypes.string.isRequired,
   value: PropTypes.string.isRequired,
   validInput: PropTypes.bool,

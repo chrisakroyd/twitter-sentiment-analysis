@@ -1,3 +1,35 @@
+import tensorflow as tf
+from tensorflow.keras.layers import Activation, Bidirectional, CuDNNLSTM, Dense, Dropout
+
+from src import layers, models, train_utils
+
+
+class LSTMConcPool(tf.keras.models.Model):
+    def __init__(self, embedding_matrix, char_matrix, trainable_matrix, num_classes, params, **kwargs):
+        super(LSTMConcPool, self).__init__(**kwargs)
+        self.global_step = tf.train.get_or_create_global_step()
+        self.dropout = tf.placeholder_with_default(params.dropout, (), name='dropout')
+        self.attn_dropout = tf.placeholder_with_default(params.attn_dropout, (), name='attn_dropout')
+
+        self.embedding = models.EmbeddingLayer(embedding_matrix, trainable_matrix, char_matrix,
+                                               word_dim=params.embed_dim, char_dim=params.char_dim,
+                                               word_dropout=self.dropout, char_dropout=self.dropout / 2)
+
+        self.rnn_1 = Bidirectional(CuDNNLSTM(params.hidden_units, return_sequences=True, name='bi_gru_1'))
+
+        self.drop_1 = Dropout(self.dropout, name='bi_gru_1_dropout')
+
+        self.rnn_2 = Bidirectional(CuDNNLSTM(params.hidden_units, return_sequences=True, name='bi_gru_2'))
+
+        self.drop_2 = Dropout(self.dropout, name='bi_gru_2_dropout')
+
+        self.attention = layers.Attention()
+
+        self.drop_3 = Dropout(self.attn_dropout, name='attention_dropout')
+
+        self.out = Dense(num_classes, name='output')
+        self.preds = Activation('softmax')
+
 # from keras.layers import Input, Dense, Embedding, Bidirectional, SpatialDropout1D, CuDNNLSTM, concatenate,\
 #     GlobalAveragePooling1D, Dropout, Lambda
 # from keras.models import Model

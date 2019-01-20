@@ -78,7 +78,27 @@ $red-colour: #FF6666;
   input {
     font-size: 18px;
     width: 100%;
-    padding: 6px 16px;
+    padding: 6px 0 6px 16px;
+  }
+
+  svg {
+    margin: 12px 0;
+    padding-right: 10px;
+    cursor: pointer;
+
+    .icon-path {
+      opacity: .3;
+      transition: .5s;
+      transform-origin: center;
+    }
+
+    &:hover {
+      .icon-path {
+        opacity: 1;
+        transform: rotate(90deg);
+        fill: $green-colour;
+      }
+    }
   }
 }
 

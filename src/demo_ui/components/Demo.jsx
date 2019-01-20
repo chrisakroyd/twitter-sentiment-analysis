@@ -10,7 +10,7 @@ import Donut from './Donut/Donut';
 import Button from './common/Button';
 import InputBar from './common/InputBar';
 
-const Demo = ({ process, toggleToken, setText, predictions, text }) => {
+const Demo = ({ process, toggleToken, setText, predictions, text, loadExample }) => {
   const textLabel = predictions.label.toLowerCase();
   const classificationClass = classNames('label-header', {
     positive: textLabel === 'positive',
@@ -33,6 +33,7 @@ const Demo = ({ process, toggleToken, setText, predictions, text }) => {
             <div className="enter-text-row">
               <InputBar
                 onEnter={process}
+                onRefresh={loadExample}
                 value={text.text}
                 placeholder="Enter text here"
                 onKeyPress={setText}
@@ -74,6 +75,7 @@ Demo.propTypes = {
   process: PropTypes.func.isRequired,
   toggleToken: PropTypes.func.isRequired,
   setText: PropTypes.func.isRequired,
+  loadExample: PropTypes.func.isRequired,
   // Data
   predictions: PropTypes.shape({
     tokens: PropTypes.arrayOf(PropTypes.string).isRequired,
