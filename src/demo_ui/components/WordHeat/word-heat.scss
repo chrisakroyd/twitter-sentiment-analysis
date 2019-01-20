@@ -23,11 +23,15 @@ $border-radius: 5px;
       cursor: pointer;
       text-decoration: line-through;
       background-color: rgba(0, 0, 0, 0.1);
+      opacity: 0.8;
 
       &.enabled {
         text-decoration: none;
       }
 
+      &:hover {
+        opacity: 1;
+      }
     }
   }
 }
