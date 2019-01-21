@@ -14,16 +14,18 @@ const interpolate = interpolateHcl(lowColour, highColour);
 class WordHeat extends React.Component {
   generateWordComponents() {
     const { scores, onClick, enabled } = this.props;
-
+    const maxScore = Math.max(...scores);
     return this.props.tokens.map((word, i) => {
       const style = {};
       if (enabled[i]) {
-        style.backgroundColor = interpolate(scores[i] * 15);
+        style.backgroundColor = interpolate(scores[i] / maxScore);
       }
       return (
         <div
           key={shortid.generate()}
           role="button"
+          tabIndex={0}
+          onKeyPress={(event) => { if (event.key === 'Enter') onClick(i); }}
           className={classNames('heat-word', { enabled: enabled[i] })}
           onClick={() => onClick(i)}
           style={style}

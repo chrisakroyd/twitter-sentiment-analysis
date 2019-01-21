@@ -74,8 +74,15 @@ $red-colour: #FF6666;
 
 .input-bar {
   height: $input-bar-height;
+  background-color: rgba(0, 0, 0, 0.03);
+  transition: .25s;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.08)
+  }
 
   input {
+    background-color: unset;
     font-size: 18px;
     width: 100%;
     padding: 6px 0 6px 16px;

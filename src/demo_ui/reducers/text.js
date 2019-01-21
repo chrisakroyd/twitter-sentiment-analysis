@@ -11,7 +11,6 @@ const text = (state = {}, action) => {
     }
     case EXAMPLES:
       return Object.assign({}, state, {
-        text: '',
         loading: true,
       });
     case EXAMPLES_SUCCESS:

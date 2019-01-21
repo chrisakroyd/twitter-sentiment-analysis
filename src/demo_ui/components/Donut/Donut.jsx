@@ -3,18 +3,20 @@ import PropTypes from 'prop-types';
 import shortid from 'shortid';
 import * as d3 from 'd3';
 
+import { classesShape } from '../../prop-shapes';
+
 const DONUT_HEIGHT = 250;
 const DONUT_WIDTH = 450;
 const colourMap = {
-  0: '#5fcf80',
-  1: 'gray',
-  2: '#FF6666',
+  positive: '#5fcf80',
+  neutral: 'gray',
+  negative: '#FF6666',
 };
 
 const labelMap = {
-  0: 'Positive',
-  1: 'Neutral',
-  2: 'Negative',
+  positive: 'Positive',
+  neutral: 'Neutral',
+  negative: 'Negative',
 };
 
 
@@ -31,9 +33,11 @@ class Donut extends React.Component {
       .outerRadius(radius * 0.9)
       .innerRadius(radius * 0.9);
     const test = pie(this.props.probs);
+    const transform = `translate(${DONUT_WIDTH / 2}, ${DONUT_HEIGHT / 2})`;
+
     return (
-      <svg ref={this.element} height={DONUT_HEIGHT} width={DONUT_WIDTH} transform="translate(225, 125)">
-        <g className="labels">
+      <svg ref={this.element} height={DONUT_HEIGHT} width={DONUT_WIDTH}>
+        <g className="labels" transform={transform}>
           {
             test.map((prob, i) => {
               const pos = outerArc.centroid(prob);
@@ -44,32 +48,34 @@ class Donut extends React.Component {
                   key={shortid.generate()}
                   dy=".35em"
                   textAnchor={anchor}
-                  stroke={colourMap[i]}
+                  stroke={colourMap[this.props.classes[i]]}
                   transform={`translate(${pos})`}
                 >
-                  {labelMap[i]} {(prob.data * 100).toFixed(1)}%
+                  {labelMap[this.props.classes[i]]} {(prob.data * 100).toFixed(1)}%
                 </text>);
             })
           }
         </g>
-        <g className="lines">
+        <g className="lines" transform={transform}>
           {
             test.map((prob, i) => {
               const pos = outerArc.centroid(prob);
               pos[0] = radius * 0.95 * (midAngle(prob) < Math.PI ? 1 : -1);
               const test2 = [arc.centroid(prob), outerArc.centroid(prob), pos];
-              return <polyline key={shortid.generate()} points={test2} stroke={colourMap[i]} />;
+              return <polyline key={shortid.generate()} points={test2} stroke={colourMap[this.props.classes[i]]} />;
             })
           }
         </g>
-        {
-          test.map((prob, i) => (
-            <path
-              key={shortid.generate()}
-              d={arc(prob)}
-              fill={colourMap[i]}
-            />))
-        }
+        <g className="arcs" transform={transform}>
+          {
+            test.map((prob, i) => (
+              <path
+                key={shortid.generate()}
+                d={arc(prob)}
+                fill={colourMap[this.props.classes[i]]}
+              />))
+          }
+        </g>
       </svg>
     );
   }
@@ -77,6 +83,7 @@ class Donut extends React.Component {
 
 Donut.propTypes = {
   probs: PropTypes.arrayOf(PropTypes.number).isRequired,
+  classes: classesShape.isRequired,
 };
 
 export default Donut;
