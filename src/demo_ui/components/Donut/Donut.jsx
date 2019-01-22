@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import shortid from 'shortid';
-import * as d3 from 'd3';
+import * as d3Shape from 'd3-shape';
 
 import { classesShape } from '../../prop-shapes';
 
@@ -27,9 +27,9 @@ function midAngle(d) {
 class Donut extends React.Component {
   render() {
     const radius = Math.min(DONUT_WIDTH, DONUT_HEIGHT) / 2;
-    const pie = d3.pie().sort(null).value(d => d);
-    const arc = d3.arc().innerRadius(radius * 0.8).outerRadius(radius * 0.65);
-    const outerArc = d3.arc()
+    const pie = d3Shape.pie().sort(null).value(d => d);
+    const arc = d3Shape.arc().innerRadius(radius * 0.8).outerRadius(radius * 0.65);
+    const outerArc = d3Shape.arc()
       .outerRadius(radius * 0.9)
       .innerRadius(radius * 0.9);
     const test = pie(this.props.probs);

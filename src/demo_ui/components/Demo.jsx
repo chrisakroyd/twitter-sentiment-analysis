@@ -92,7 +92,7 @@ const Demo = ({ process, toggleToken, setText, predictions, text, loadExample })
             placeholder="Enter text here"
             onKeyPress={setText}
           />
-          <Button onClick={process} label="Predict" enabled={validInput}/>
+          <Button onClick={process} label="Predict" enabled={validInput} />
         </div>
         {errorContent}
         <div className="text-block">
