@@ -50,7 +50,7 @@ class LSTMAttention(tf.keras.models.Model):
         return logits, preds, attn_weights
 
     def compute_loss(self, logits, labels, l2=None):
-        loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits, labels=labels)
+        loss = tf.nn.softmax_cross_entropy_with_logits_v2(logits=logits, labels=labels)
         loss = tf.reduce_mean(loss)
 
         if l2 is not None and l2 > 0.0:

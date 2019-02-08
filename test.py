@@ -13,23 +13,29 @@ def test(sess_config, params):
     vocabs = util.load_vocab_files(paths=(word_index_path, char_index_path))
     word_matrix, trainable_matrix, character_matrix = util.load_numpy_files(paths=embedding_paths)
     meta = util.load_json(meta_path)
+    num_classes = meta['num_classes']
 
     with tf.device('/cpu:0'):
         tables = pipeline.create_lookup_tables(vocabs)
         val_tfrecords = util.tf_record_paths(params, training=False)
-        val_set, iterator = pipeline.create_pipeline(params, tables, val_tfrecords, training=False)
+        val_set, iterator = pipeline.create_pipeline(params, tables, val_tfrecords, num_classes, training=False)
 
     with tf.Session(config=sess_config) as sess:
         sess.run(iterator.initializer)
         sess.run(tf.tables_initializer())
 
-        model = models.LSTMAttention(word_matrix, character_matrix, trainable_matrix, meta['num_classes'], params)
+        model = models.LSTMAttention(word_matrix, character_matrix, trainable_matrix, num_classes, params)
 
         placeholders = iterator.get_next()
         # Features and labels.
         model_inputs = train_utils.inputs_as_tuple(placeholders)
         label_tensor = train_utils.labels_as_tuple(placeholders)[0]
         logits, prediction, _ = model(model_inputs, training=False)
+
+        recall = metrics.recall(label_tensor, prediction)
+        precision = metrics.precision(label_tensor, prediction)
+        f1 = metrics.harmonic_mean(precision, recall)
+        test_outputs = [recall, precision, f1]
 
         sess.run(tf.global_variables_initializer())
 
@@ -39,12 +45,12 @@ def test(sess_config, params):
         preds = []
         # +1 for uneven batch values, +1 for the range.
         for _ in tqdm(range(1, (meta['num_val'] // params.batch_size + 1) + 1)):
-            pred, label = sess.run([prediction, label_tensor],
-                                   feed_dict={
-                                       model.dropout: 0.0,
-                                       model.attn_dropout: 0.0,
-                                   })
-            preds.append((0.0, pred, label,))
+            recall, precision, f1 = sess.run(test_outputs,
+                                             feed_dict={
+                                                 model.dropout: 0.0,
+                                                 model.attn_dropout: 0.0,
+                                             })
+            preds.append((recall, precision, f1,))
 
         # Evaluate the predictions and reset the train result list for next eval period.
         val_metrics = metrics.evaluate_list(preds)

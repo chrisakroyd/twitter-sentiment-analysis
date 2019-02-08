@@ -7,11 +7,11 @@ def get_predict_response(tokens, probs, preds, attn_out, orig_body):
     """
         Given tokens, probs, preds and attention weights generates a json formatted response body.
         Args:
-            text: Original text.
             tokens: Tokenized form of the original text.
             probs: The softmax probabilities for each class.
             preds: The predicted class label.
             attn_out: Attention weights.
+            orig_body: The original request body.
         Returns:
             Formatted prediction response message.
     """

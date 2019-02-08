@@ -14,21 +14,22 @@ def train(sess_config, params):
     vocabs = util.load_vocab_files(paths=(word_index_path, char_index_path))
     word_matrix, trainable_matrix, character_matrix = util.load_numpy_files(paths=embedding_paths)
     meta = util.load_json(meta_path)
+    num_classes = meta['num_classes']
 
     with tf.device('/cpu:0'):
         tables = pipeline.create_lookup_tables(vocabs)
 
         train_tfrecords = util.tf_record_paths(params, training=True)
         val_tfrecords = util.tf_record_paths(params, training=False)
-        train_set, train_iter = pipeline.create_pipeline(params, tables, train_tfrecords, training=True)
-        _, val_iter = pipeline.create_pipeline(params, tables, val_tfrecords, training=False)
+        train_set, train_iter = pipeline.create_pipeline(params, tables, train_tfrecords, num_classes, training=True)
+        _, val_iter = pipeline.create_pipeline(params, tables, val_tfrecords, num_classes, training=False)
 
     with tf.Session(config=sess_config) as sess:
         sess.run([tf.tables_initializer(), train_iter.initializer, val_iter.initializer])
         handle = tf.placeholder(tf.string, shape=[])
         iterator = tf.data.Iterator.from_string_handle(handle, train_set.output_types, train_set.output_shapes)
 
-        model = models.LSTMAttention(word_matrix, character_matrix, trainable_matrix, meta['num_classes'], params)
+        model = models.LSTMAttention(word_matrix, character_matrix, trainable_matrix, num_classes, params)
 
         placeholders = iterator.get_next()
         # Features and labels.
@@ -48,8 +49,12 @@ def train(sess_config, params):
                                                   beta2=params.beta2,
                                                   epsilon=params.epsilon)
 
-        train_outputs = [loss_op, prediction, label_tensor, train_op]
-        val_outputs = [loss_op, prediction, label_tensor]
+        recall = metrics.recall(label_tensor, prediction)
+        precision = metrics.precision(label_tensor, prediction)
+        f1 = metrics.harmonic_mean(precision, recall)
+
+        train_outputs = [recall, precision, f1, train_op]
+        val_outputs = [recall, precision, f1]
         sess.run(tf.global_variables_initializer())
         # Saver boilerplate
         writer = tf.summary.FileWriter(log_dir, graph=sess.graph)
@@ -71,20 +76,21 @@ def train(sess_config, params):
 
         for _ in range(int(total_steps - global_step)):
             global_step = sess.run(model.global_step) + 1
-            loss, pred, label, _ = sess.run(fetches=train_outputs, feed_dict={handle: train_handle})
-            train_preds.append((loss, pred, label, ))
+            # loss, pred, label, _ = sess.run(fetches=train_outputs, feed_dict={handle: train_handle})
+            recall, precision, f1, _ = sess.run(fetches=train_outputs, feed_dict={handle: train_handle})
+            train_preds.append((recall, precision, f1, ))
             pbar.update()
             # Save at the end of each epoch
             if (global_step % (meta['num_train'] // params.batch_size)) == 0 or global_step == total_steps:
                 val_preds = []
                 for _ in range(meta['num_val']):
-                    loss, pred, label = sess.run(fetches=val_outputs,
-                                                 feed_dict={
-                                                    handle: val_handle,
-                                                    model.dropout: 0.0,
-                                                    model.attn_dropout: 0.0,
-                                                  })
-                    val_preds.append((loss, pred, label, ))
+                    recall, precision, f1 = sess.run(fetches=val_outputs,
+                                                     feed_dict={
+                                                        handle: val_handle,
+                                                        model.dropout: 0.0,
+                                                        model.attn_dropout: 0.0,
+                                                      })
+                    val_preds.append((recall, precision, f1, ))
 
                 metrics.evaluate_list(train_preds, 'train', writer, global_step)
                 val_metrics = metrics.evaluate_list(val_preds, 'val', writer, global_step)

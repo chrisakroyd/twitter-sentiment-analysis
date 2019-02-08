@@ -60,21 +60,33 @@ def index_lookup(data, tables, char_limit=16, num_parallel_calls=4, has_labels=T
         chars = tf.string_split(fields['tokens'], delimiter='')
         chars = tf.sparse.to_dense(char_table.lookup(chars), default_value=-1) + 1
         chars = chars[:, :char_limit]
+        fields['words'] = tokens
+        fields['chars'] = chars
+        return fields
 
+    data = data.map(_lookup, num_parallel_calls=num_parallel_calls)
+    return data
+
+
+def format_output(data, num_classes, num_parallel_calls=4):
+    """ Casts tensors to their intended dtypes and converts label tensor to be one-hot. """
+
+    def _lookup(fields):
         out_dict = {
-            'words': tf.cast(tokens, dtype=tf.int32),
-            'chars': tf.cast(chars, dtype=tf.int32),
+            'words': tf.cast(fields['words'], dtype=tf.int32),
+            'chars': tf.cast(fields['chars'], dtype=tf.int32),
             'num_tokens': tf.cast(fields['num_tokens'], dtype=tf.int32),
         }
 
-        if has_labels:
+        if 'label' in fields:
             out_dict.update({
-                'label': tf.cast(fields['label'], dtype=tf.int32),
+                'label': tf.one_hot(fields['label'], num_classes, dtype=tf.int32)
             })
 
         return out_dict
 
     data = data.map(_lookup, num_parallel_calls=num_parallel_calls)
+
     return data
 
 
@@ -92,7 +104,7 @@ def create_buckets(bucket_size, max_size, bucket_ranges=None):
     return bucket_ranges
 
 
-def get_padded_shapes(max_tokens=-1, max_characters=16, has_labels=True):
+def get_padded_shapes(max_tokens=-1, max_characters=16, num_classes=2, has_labels=True):
     """ Creates a dict of key: shape mappings for padding batches.
 
         @TODO This is a pretty ugly solution to support labelled/unlabelled modes, refactor target?
@@ -100,6 +112,7 @@ def get_padded_shapes(max_tokens=-1, max_characters=16, has_labels=True):
         Args:
             max_tokens: Max size of the context, -1 to pad to max within the batch.
             max_characters: Max number of characters, -1 to pad to max within the batch.
+            num_classes: Number of classes in the dataset.
             has_labels: Include padded shape for answer_starts and answer_ends.
         Returns:
             A dict mapping of key: shape
@@ -112,8 +125,9 @@ def get_padded_shapes(max_tokens=-1, max_characters=16, has_labels=True):
 
     if has_labels:
         shape_dict.update({
-            'label': [],
+            'label': [num_classes],
         })
+
     return shape_dict
 
 
@@ -133,7 +147,7 @@ def create_lookup_tables(vocabs):
     return tables
 
 
-def create_pipeline(params, tables, record_paths, training=True):
+def create_pipeline(params, tables, record_paths, num_classes, training=True):
     """ Function that creates an input pipeline for train/eval.
 
         Optionally uses bucketing to generate batches of a similar length. Output tensors
@@ -147,18 +161,21 @@ def create_pipeline(params, tables, record_paths, training=True):
         Returns:
             A `tf.data.Dataset` object and an initializable iterator.
     """
-    parallel_calls = num_parallel_calls(params)
+    parallel_calls = get_num_parallel_calls(params)
 
     data = tf_record_pipeline(record_paths, params.tf_record_buffer_size, parallel_calls)
     data = data.cache()
+
     if training:
         data = data.apply(tf.data.experimental.shuffle_and_repeat(buffer_size=params.shuffle_buffer_size))
     else:
         data = data.repeat()
+
     # Perform word -> index mapping.
     data = index_lookup(data, tables, char_limit=params.char_limit,
                         num_parallel_calls=parallel_calls)
-    padded_shapes = get_padded_shapes(max_tokens=params.max_tokens, max_characters=params.char_limit)
+    data = format_output(data, num_classes, num_parallel_calls=parallel_calls)
+    padded_shapes = get_padded_shapes(max_tokens=params.max_tokens, max_characters=params.char_limit, num_classes=num_classes)
 
     if params.bucket and training:
         buckets = create_buckets(params.bucket_size, params.max_tokens, params.bucket_ranges)
@@ -196,7 +213,7 @@ def create_demo_pipeline(params, tables, data):
         Returns:
             A `tf.data.Dataset` object and an initializable iterator.
     """
-    parallel_calls = num_parallel_calls(params)
+    parallel_calls = get_num_parallel_calls(params)
 
     data = tf.data.Dataset.from_tensor_slices(dict(data))
     data = index_lookup(data, tables, char_limit=params.char_limit,
@@ -219,8 +236,8 @@ def create_placeholders():
     }
 
 
-def num_parallel_calls(params):
-    # If we aren't given a parallel calls parameter, default to the systems CPU count.
+def get_num_parallel_calls(params):
+    """ Calculates the number of parallel calls we can make, if no number given returns the CPU count. """
     parallel_calls = params.parallel_calls
     if parallel_calls < 0:
         parallel_calls = os.cpu_count()

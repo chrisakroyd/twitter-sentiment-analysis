@@ -32,11 +32,11 @@ class Attention(tf.keras.layers.Layer):
         eij = tf.squeeze(tf.keras.backend.dot(x, self.kernel), axis=-1)
         eij = tf.tanh(eij)
 
-        a = tf.exp(eij)
-
         # apply mask.
         if mask is not None:
-            a *= tf.cast(mask, tf.float32)
+            eij *= tf.cast(mask, tf.float32)
+
+        a = tf.exp(eij)
 
         a /= tf.cast(tf.reduce_sum(a, axis=1, keepdims=True) + tf.keras.backend.epsilon(), tf.float32)
         att_weights = a
