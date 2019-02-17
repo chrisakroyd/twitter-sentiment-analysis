@@ -8,7 +8,6 @@ def evaluate_list(preds, data_type=None, writer=None, global_step=0, subsample_r
     if subsample_ratio is not None:
         preds = [preds[i] for i in random.sample(range(len(preds)), int(len(preds) * subsample_ratio))]
 
-    # for _, pred, labels in preds:
     for rec, prec, f_score in preds:
         avg_recall += rec
         avg_precision += prec

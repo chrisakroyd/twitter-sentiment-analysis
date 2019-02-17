@@ -1,6 +1,6 @@
 import string
-import re
 from collections import Counter
+import spacy
 
 default_punct = set(string.punctuation)
 
@@ -9,7 +9,10 @@ class Tokenizer(object):
     def __init__(self, lower=False, filters=default_punct, max_words=25000, max_chars=2500, min_word_occurrence=-1,
                  min_char_occurrence=-1, vocab=None, word_index=None, char_index=None, oov_token='<oov>',
                  trainable_words=None):
-        """Constructs a Tokenizer Object.
+        """
+            Constructs a Tokenizer Object, this is a wrapper around Spacy which tracks word/character usage as well
+            as handling trainable words, unknown word tokens and filters.
+
             Args:
                 lower: Whether to lower case all strings.
                 filters: Set, list or string of any punctuation we should ignore.
@@ -40,35 +43,49 @@ class Tokenizer(object):
         self.just_fit = False
         self.given_vocab = vocab is not None
 
-        if not isinstance(filters, set):
-            if isinstance(filters, str):
-                filters = list(filters)
-            self.filters = set(filters if filters else [])
+        self.nlp = spacy.load('en_core_web_sm', disable=['tagger', 'ner', 'parser'])
+
+        if not isinstance(filters, set) and filters is not None:
+            self.filters = set(filters)
         else:
-            self.filters = filters
+            self.filters = set()
 
         self.init()
 
-    def tokenize(self, text):
+    def tokenize(self, text, error_correct=True):
         """ Splits a text or list of text into its constituent words.
             Args:
                 text: string or list of string of untokenized text.
+                error_correct: If we have a vocab, attempts to correct minor errors against it. e.g. Token is steve
+                               but vocab only has Steve -> We replace steve with Steve. If in the vocab we do nothing.
             returns:
                 List of tokenized text.
         """
         if self.lower:
             text = text.lower()
+
         tokens = []
-        for token in re.findall(r'(<\w+>|\w+|[^\w\s])', text, re.UNICODE):
-            if token not in self.filters and len(token) > 0:
-                tokens.append(token)
+        for token in self.nlp(text):
+            text = token.text
+
+            if self.given_vocab and error_correct and text not in self.vocab:
+                # We generate a short list of candidate words
+                for word in (text.lower(), text.capitalize(), text.lower().capitalize(), text.upper(), token.lemma_):
+                    if word in self.vocab:
+                        text = word
+                        break
+
+            if text not in self.filters and len(text) > 0:
+                tokens.append(text)
 
         return tokens
 
-    def fit_on_texts(self, texts):
+    def fit_on_texts(self, texts, error_correct=True):
         """ Counts word/character occurrence.
             Args:
                 texts: string or list of string of untokenized text.
+                error_correct: If we have a vocab, attempts to correct minor errors against it. e.g. Token is steve
+                               but vocab only has Steve -> We replace steve with Steve. If in the vocab we do nothing.
             returns:
                 List of tokenized text.
         """
@@ -77,7 +94,7 @@ class Tokenizer(object):
             texts = [texts]
 
         for text in texts:
-            tokens = self.tokenize(text)
+            tokens = self.tokenize(text, error_correct)
 
             for token in tokens:
                 self.word_counter[token] += 1
@@ -146,7 +163,6 @@ class Tokenizer(object):
         """ Initialises the vocab, word and char indices if they have not been set or need updating. """
         # Word indexes haven't been initialised or need updating.
         if (len(self.word_index) == 0 or len(self.char_index)) == 0 or self.just_fit:
-            # Add vocab + create indexes.
             self.update_vocab()
             self.update_indexes()
             self.just_fit = False
