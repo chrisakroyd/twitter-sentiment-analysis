@@ -50,7 +50,7 @@ arrows = re.compile("[<>]")
 
 def allcaps(text):
     text = text.group()
-    return text.lower() + " <allcaps> "
+    return text.lower() + " -allcaps- "
 
 
 def hashtag(text):
@@ -60,10 +60,10 @@ def hashtag(text):
     hashtag_body = ' '.join(segment(hashtag_body))
 
     if is_uppercase:
-        result = " <hashtag> {} <allcaps> </hashtag>".format(hashtag_body)
+        result = " -hashtag- {} -allcaps- -/hashtag-".format(hashtag_body)
     else:
         hashtag_body = hashtag_splitter_regex.sub(r' \1', hashtag_body)
-        result = " ".join([" <hashtag>"] + hashtag_body.split(r"(?=[A-Z])") + ["</hashtag> "])
+        result = " ".join([" -hashtag-"] + hashtag_body.split(r"(?=[A-Z])") + ["-/hashtag- "])
     return result
 
 
@@ -92,32 +92,32 @@ class TextPreProcessor:
         eyes = r"[8:=;Xx]"
         nose = r"['`^\-0Oo]?"
 
-        text = re_sub(r"\B{}{}[)D]+|[(D]+{}{}".format(eyes, nose, nose, eyes), ' <smile> ')
-        text = re_sub(r"\B{}{}[pPbB]+".format(loleyes, nose), ' <lolface> ')
-        text = re_sub(r"\B{}{}[(?]+|\)+{}{}".format(eyes, nose, nose, eyes), ' <sadface> ')
-        text = re_sub(r"\B{}{}[\/\\|l]".format(eyes, nose), ' <neutralface> ')
-        text = re_sub(r"\B{}{}[*]".format(eyes, nose), ' <kisses> ')
+        text = re_sub(r"\B{}{}[)D]+|[(D]+{}{}".format(eyes, nose, nose, eyes), ' -smile- ')
+        text = re_sub(r"\B{}{}[pPbB]+".format(loleyes, nose), ' -lolface- ')
+        text = re_sub(r"\B{}{}[(?]+|\)+{}{}".format(eyes, nose, nose, eyes), ' -sadface- ')
+        text = re_sub(r"\B{}{}[\/\\|l]".format(eyes, nose), ' -neutralface- ')
+        text = re_sub(r"\B{}{}[*]".format(eyes, nose), ' -kisses- ')
 
         # Replace kisses e.g. xx, xoxoxo
-        text = re.sub(r'(\b([Xx][Oo]){1,}\b)|(\b[Xx]{2,}\b)|(\b[Xx]$)', ' <kisses> ', text)
+        text = re.sub(r'(\b([Xx][Oo]){1,}\b)|(\b[Xx]{2,}\b)|(\b[Xx]$)', ' -kisses- ', text)
 
         return text
 
     def annotate_basic_attributes(self, text):
         # Replace URLs
-        text = url_regex.sub(' <url> ', text)
+        text = url_regex.sub(' -url- ', text)
         # Replace Emails
-        text = email_regex.sub(' <email> ', text)
+        text = email_regex.sub(' -email- ', text)
         # Replace User Names
-        text = users_regex.sub(' <user> ', text)
+        text = users_regex.sub(' -user- ', text)
         # Replace Dates/Time
-        text = date_regex.sub(' <date> ', text)
-        text = time_regex.sub(' <time> ', text)
+        text = date_regex.sub(' -date- ', text)
+        text = time_regex.sub(' -time- ', text)
         # Replace abstract number values with an annotation
-        text = money_regex.sub(' <currency> ', text)
-        text = percent_regex.sub(' <percent> ', text)
+        text = money_regex.sub(' -currency- ', text)
+        text = percent_regex.sub(' -percent- ', text)
         # Replaces simple sport scores etc.
-        text = scores_regex.sub(' <score> ', text)
+        text = scores_regex.sub(' -score- ', text)
         return text
 
     def annotate_hashtags(self, text):
@@ -144,7 +144,7 @@ class TextPreProcessor:
         text = self.annotate_hashtags(text)
 
         # Replace Numbers
-        text = numbers_regex.sub(' <number> ', text)
+        text = numbers_regex.sub(' -number- ', text)
         # Remove multi spaces - Prevents errant <repeat> signals appearing in text
         text = re.sub('\s+', ' ', text)
         text = seperate_apostrophes.sub(r' \1 \2 ', text)
@@ -162,6 +162,6 @@ class TextPreProcessor:
 
         # If this string is a single space replace with an <empty> tag.
         if text == ' ':
-            text = '<empty>'
+            text = '-empty-'
 
         return text.strip()

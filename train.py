@@ -6,23 +6,24 @@ from src import config, constants, metrics, models, pipeline, train_utils, util
 
 def train(sess_config, params):
     _, out_dir, model_dir, log_dir = util.train_paths(params)
-    word_index_path, _, char_index_path = util.index_paths(params)
+    word_index_path, _, char_index_path, pos_index_path = util.index_paths(params)
     embedding_paths = util.embedding_paths(params)
     meta_path = util.meta_path(params)
     util.make_dirs([out_dir, model_dir, log_dir])
 
-    vocabs = util.load_vocab_files(paths=(word_index_path, char_index_path))
+    vocabs = util.load_vocab_files(paths=(word_index_path, char_index_path, pos_index_path))
     word_matrix, trainable_matrix, character_matrix = util.load_numpy_files(paths=embedding_paths)
     meta = util.load_json(meta_path)
     num_classes = meta['num_classes']
+    num_tags = meta['num_tags']
 
     with tf.device('/cpu:0'):
         tables = pipeline.create_lookup_tables(vocabs)
 
         train_tfrecords = util.tf_record_paths(params, training=True)
         val_tfrecords = util.tf_record_paths(params, training=False)
-        train_set, train_iter = pipeline.create_pipeline(params, tables, train_tfrecords, num_classes, training=True)
-        _, val_iter = pipeline.create_pipeline(params, tables, val_tfrecords, num_classes, training=False)
+        train_set, train_iter = pipeline.create_pipeline(params, tables, train_tfrecords, num_classes, num_tags, training=True)
+        _, val_iter = pipeline.create_pipeline(params, tables, val_tfrecords, num_classes, num_tags, training=False)
 
     with tf.Session(config=sess_config) as sess:
         sess.run([tf.tables_initializer(), train_iter.initializer, val_iter.initializer])
@@ -92,7 +93,7 @@ def train(sess_config, params):
                                                       })
                     val_preds.append((recall, precision, f1, ))
 
-                metrics.evaluate_list(train_preds, 'train', writer, global_step)
+                metrics.evaluate_list(train_preds, 'train', writer, global_step, subsample_ratio=0.1)
                 val_metrics = metrics.evaluate_list(val_preds, 'val', writer, global_step)
 
                 print('Epoch {num}: val_recall:{recall}, val_precision: {prec}, val_f1: {f1}'.format(

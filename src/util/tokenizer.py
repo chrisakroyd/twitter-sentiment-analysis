@@ -28,6 +28,7 @@ class Tokenizer(object):
         """
         self.word_counter = Counter()
         self.char_counter = Counter()
+        self.tag_counter = Counter()
         self.vocab = set(vocab if vocab else [])
         self.trainable_words = set(trainable_words if trainable_words else [])
 
@@ -44,6 +45,7 @@ class Tokenizer(object):
         self.given_vocab = vocab is not None
 
         self.nlp = spacy.load('en_core_web_sm', disable=['parser'])
+        self.tag_index = {key: i for i, key in enumerate(self.nlp.tokenizer.vocab.morphology.tag_map.keys())}
 
         if not isinstance(filters, set) and filters is not None:
             self.filters = set(filters)
@@ -66,9 +68,11 @@ class Tokenizer(object):
 
         original_tokens = []
         modified_tokens = []
+        pos_tags = []
 
         for token in self.nlp(text):
             text = token.text
+            tag = token.tag_
             token_corrected = False
 
             if self.given_vocab and error_correct and text not in self.vocab:
@@ -88,9 +92,11 @@ class Tokenizer(object):
                     original_tokens.append(text)
                     modified_tokens.append(text)
 
+            pos_tags.append(tag)
+
         assert len(original_tokens) == len(modified_tokens)
 
-        return original_tokens, modified_tokens
+        return original_tokens, modified_tokens, pos_tags
 
     def fit_on_texts(self, texts, error_correct=True):
         """ Counts word/character occurrence.
@@ -106,20 +112,22 @@ class Tokenizer(object):
             texts = [texts]
 
         for text in texts:
-            tokens, modified_tokens = self.tokenize(text, error_correct)
+            tokens, modified_tokens, pos_tags = self.tokenize(text, error_correct)
 
-            for token in modified_tokens:
+            for token, tag in zip(modified_tokens, pos_tags):
                 self.word_counter[token] += 1
+                self.tag_counter[tag] += 1
+
                 for char in list(token):
                     self.char_counter[char] += 1
 
-            tokenized.append((tokens, modified_tokens, ))
+            tokenized.append((tokens, modified_tokens, pos_tags, ))
 
         self.just_fit = True
         return tokenized
 
     def update_indexes(self):
-        """ Creates word, character and handles trainable words.
+        """ Creates word, character indexes and handles trainable words.
 
             To facilitate trainable embeddings only for a subset of word and OOV tokens we need a special way of
             handling the word and char index creation. We create the word indexes as normal, but instead of assigning
@@ -129,7 +137,7 @@ class Tokenizer(object):
         print('Total Unique Words: %d' % len(self.word_counter))
         sorted_words = self.word_counter.most_common(self.max_words)
         sorted_chars = self.char_counter.most_common(self.max_chars)
-        # Create list of words/chars that occur greater than min and are in the vocab or not filtered.
+
         word_index = [word for (word, count) in sorted_words if count > self.min_word_occurrence and
                       word in self.vocab and word not in self.filters and word not in self.trainable_words]
 
@@ -138,15 +146,17 @@ class Tokenizer(object):
         char_index = [char for (char, count) in sorted_chars if count > self.min_char_occurrence and
                       char not in self.filters]
 
-        # Give each word id's in continuous range 1 to index length + convert to dict.
+        # Put all the Ids in a continues range from 1 to len(vocab), this is necessary to keep indices in sync.
         word_index = {word: i for i, word in enumerate(word_index, start=1)}
         char_index = {char: i for i, char in enumerate(char_index, start=1)}
-        # Add any trainable words to the end of the index (Therefore can exceed max_words)
+
+        # Add any trainable words to the end of the index (Refer to src/models/embedding_layer for a full reason why)
         vocab_size = len(word_index)
         for i, word in enumerate(self.trainable_words, start=1):
             assert (vocab_size + i) not in word_index.values()
             word_index[word] = vocab_size + i
-        # Add OOV token to the word + char index (Always have an OOV token).
+
+        # Add OOV token to the word + char index (So we always have an OOV token in the vocab).
         if self.oov_token not in word_index:
             assert len(word_index) + 1 not in word_index.values()
             word_index[self.oov_token] = len(word_index) + 1  # Add OOV as the last character

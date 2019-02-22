@@ -28,13 +28,14 @@ def fit_and_extract(data_set, tokenizer, classes, params):
 
     for index, tweet in tqdm(data_set.iterrows()):
         tweet_text = preprocessor.preprocess(tweet['text'])
-        tweet_tokens = tokenizer.fit_on_texts(tweet_text)[-1]
-        num_tokens = len(tweet_tokens)
+        _, modified_tokens, pos_tags = tokenizer.fit_on_texts(tweet_text)[-1]
+        num_tokens = len(modified_tokens)
 
         if 0 < num_tokens < params.max_tokens:
             tweets.append({
                 'text': tweet['text'],
-                'tokens': tweet_tokens,
+                'tokens': modified_tokens,
+                'tags': pos_tags,
                 'num_tokens': num_tokens,
                 'label': classes[tweet['class']],
             })
@@ -54,13 +55,16 @@ def write_as_tf_record(path, data):
     random.shuffle(shuffled)
     for data in shuffled:
         encoded_tokens = [m.encode('utf-8') for m in data['tokens']]
+        encoded_tags = [m.encode('utf-8') for m in data['tags']]
 
         tokens = tf.train.Feature(bytes_list=tf.train.BytesList(value=encoded_tokens))
+        tags = tf.train.Feature(bytes_list=tf.train.BytesList(value=encoded_tags))
         num_tokens = tf.train.Feature(int64_list=tf.train.Int64List(value=[data['num_tokens']]))
         label = tf.train.Feature(int64_list=tf.train.Int64List(value=[data['label']]))
 
         record = tf.train.Example(features=tf.train.Features(feature={
             'tokens': tokens,
+            'tags': tags,
             'num_tokens': num_tokens,
             'label': label,
         }))
@@ -89,7 +93,7 @@ def process(params, data, print_classes=True):
     meta_path = util.meta_path(params)
     classes_path = util.classes_path(params)
     # Get paths for saving embedding related info.
-    word_index_path, trainable_index_path, char_index_path = util.index_paths(params)
+    word_index_path, trainable_index_path, char_index_path, pos_index_path = util.index_paths(params)
     word_embeddings_path, trainable_embeddings_path, char_embeddings_path = util.embedding_paths(params)
 
     if print_classes:
@@ -143,6 +147,7 @@ def process(params, data, print_classes=True):
         'num_train': len(train),
         'num_val': len(val),
         'num_classes': num_classes,
+        'num_tags': len(tokenizer.tag_index)
     }
 
     # Save meta information, e.g. number of train/val/classes
@@ -154,6 +159,7 @@ def process(params, data, print_classes=True):
     util.save_json(word_index_path, word_index)
     util.save_json(char_index_path, char_index)
     util.save_json(trainable_index_path, trainable_index)
+    util.save_json(pos_index_path, tokenizer.tag_index)
     # Save the trainable embeddings matrix.
     np.save(trainable_embeddings_path, trainable_matrix)
     # Save the full embeddings matrix

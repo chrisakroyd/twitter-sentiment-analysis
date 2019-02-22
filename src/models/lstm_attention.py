@@ -31,9 +31,11 @@ class LSTMAttention(tf.keras.models.Model):
         self.preds = Activation('softmax')
 
     def call(self, x, training=None, mask=None):
-        words, chars, num_tokens = x
+        words, chars, tags, num_tokens = x
 
         text_emb = self.embedding([words, chars], training=training)
+
+        text_emb = tf.concat([text_emb, tags], axis=-1)
 
         rnn_1_out = self.rnn_1(text_emb)
         rnn_1_out = self.drop_1(rnn_1_out, training=training)

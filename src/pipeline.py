@@ -17,6 +17,7 @@ def tf_record_pipeline(filenames, buffer_size=1024, num_parallel_calls=4):
 
     features = {
         'tokens': str_feature,
+        'tags': str_feature,
         'num_tokens': int_feature,
         'label': int_feature,
     }
@@ -32,7 +33,7 @@ def tf_record_pipeline(filenames, buffer_size=1024, num_parallel_calls=4):
     return data
 
 
-def index_lookup(data, tables, char_limit=16, num_parallel_calls=4, has_labels=True):
+def index_lookup(data, tables, char_limit=16, num_parallel_calls=4):
     """ Adds a map function to the dataset that maps strings to indices.
 
         To save memory + hard drive space we store contexts and queries as tokenised strings. Therefore we need
@@ -49,7 +50,7 @@ def index_lookup(data, tables, char_limit=16, num_parallel_calls=4, has_labels=T
         Returns:
             A `tf.data.Dataset` object.
     """
-    word_table, char_table = tables
+    word_table, char_table, tag_table = tables
 
     def _lookup(fields):
         # +1 allows us to use 0 as a padding character without explicitly mapping it.
@@ -60,21 +61,27 @@ def index_lookup(data, tables, char_limit=16, num_parallel_calls=4, has_labels=T
         chars = tf.string_split(fields['tokens'], delimiter='')
         chars = tf.sparse.to_dense(char_table.lookup(chars), default_value=-1) + 1
         chars = chars[:, :char_limit]
+
+        tags = tag_table.lookup(fields['tags'])
+
         fields['words'] = tokens
         fields['chars'] = chars
+        fields['tags'] = tags
+
         return fields
 
     data = data.map(_lookup, num_parallel_calls=num_parallel_calls)
     return data
 
 
-def format_output(data, num_classes, num_parallel_calls=4):
+def format_output(data, num_classes, num_tags, num_parallel_calls=4):
     """ Casts tensors to their intended dtypes and converts label tensor to be one-hot. """
 
     def _lookup(fields):
         out_dict = {
             'words': tf.cast(fields['words'], dtype=tf.int32),
             'chars': tf.cast(fields['chars'], dtype=tf.int32),
+            'tags': tf.one_hot(fields['tags'], num_tags, dtype=tf.float32),
             'num_tokens': tf.cast(fields['num_tokens'], dtype=tf.int32),
         }
 
@@ -104,7 +111,7 @@ def create_buckets(bucket_size, max_size, bucket_ranges=None):
     return bucket_ranges
 
 
-def get_padded_shapes(max_tokens=-1, max_characters=16, num_classes=2, has_labels=True):
+def get_padded_shapes(max_tokens=-1, max_characters=16, num_classes=2, num_tags=50, has_labels=True):
     """ Creates a dict of key: shape mappings for padding batches.
 
         @TODO This is a pretty ugly solution to support labelled/unlabelled modes, refactor target?
@@ -113,6 +120,7 @@ def get_padded_shapes(max_tokens=-1, max_characters=16, num_classes=2, has_label
             max_tokens: Max size of the context, -1 to pad to max within the batch.
             max_characters: Max number of characters, -1 to pad to max within the batch.
             num_classes: Number of classes in the dataset.
+            num_tags: Number of Pos Tags in the dataset.
             has_labels: Include padded shape for answer_starts and answer_ends.
         Returns:
             A dict mapping of key: shape
@@ -120,6 +128,7 @@ def get_padded_shapes(max_tokens=-1, max_characters=16, num_classes=2, has_label
     shape_dict = {
         'words': [max_tokens],
         'chars': [max_tokens, max_characters],
+        'tags': [max_tokens, num_tags],
         'num_tokens': []
     }
 
@@ -147,7 +156,7 @@ def create_lookup_tables(vocabs):
     return tables
 
 
-def create_pipeline(params, tables, record_paths, num_classes, training=True):
+def create_pipeline(params, tables, record_paths, num_classes, num_tags, training=True):
     """ Function that creates an input pipeline for train/eval.
 
         Optionally uses bucketing to generate batches of a similar length. Output tensors
@@ -158,6 +167,8 @@ def create_pipeline(params, tables, record_paths, num_classes, training=True):
             tables: A tuple of contrib.lookup tables mapping string words to indices and string characters to indices.
             record_paths: A list of string filepaths for .tfrecord files.
             training: Boolean value signifying whether we are in train mode.
+            num_classes: Number of classes in the dataset.
+            num_tags: Number of POS tags in the dataset.
         Returns:
             A `tf.data.Dataset` object and an initializable iterator.
     """
@@ -174,8 +185,9 @@ def create_pipeline(params, tables, record_paths, num_classes, training=True):
     # Perform word -> index mapping.
     data = index_lookup(data, tables, char_limit=params.char_limit,
                         num_parallel_calls=parallel_calls)
-    data = format_output(data, num_classes, num_parallel_calls=parallel_calls)
-    padded_shapes = get_padded_shapes(max_tokens=params.max_tokens, max_characters=params.char_limit, num_classes=num_classes)
+    data = format_output(data, num_classes, num_tags, num_parallel_calls=parallel_calls)
+    padded_shapes = get_padded_shapes(max_tokens=params.max_tokens, max_characters=params.char_limit,
+                                      num_classes=num_classes, num_tags=num_tags)
 
     if params.bucket and training:
         buckets = create_buckets(params.bucket_size, params.max_tokens, params.bucket_ranges)
@@ -217,7 +229,7 @@ def create_demo_pipeline(params, tables, data):
 
     data = tf.data.Dataset.from_tensor_slices(dict(data))
     data = index_lookup(data, tables, char_limit=params.char_limit,
-                        num_parallel_calls=parallel_calls, has_labels=False)
+                        num_parallel_calls=parallel_calls)
     padded_shapes = get_padded_shapes(max_characters=params.char_limit, has_labels=False)
     data = data.padded_batch(
         batch_size=params.batch_size,

@@ -158,7 +158,7 @@ def inputs_as_tuple(placeholders):
         Returns:
             A tuple of input tensors.
     """
-    keys = ['words', 'chars', 'num_tokens']
+    keys = ['words', 'chars', 'tags', 'num_tokens']
     return dict_keys_as_tuple(placeholders, keys)
 
 

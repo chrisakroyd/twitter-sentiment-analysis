@@ -99,11 +99,12 @@ class EmbeddingTypes:
     WORD = 'word'
     TRAINABLE = 'trainable'
     CHAR = 'char'
+    POS = 'pos'
 
     @staticmethod
     def as_list():
         """ Returns a list of all supported embedding types """
-        return [EmbeddingTypes.WORD, EmbeddingTypes.TRAINABLE, EmbeddingTypes.CHAR]
+        return [EmbeddingTypes.WORD, EmbeddingTypes.TRAINABLE, EmbeddingTypes.CHAR, EmbeddingTypes.POS]
 
 
 class ErrorMessages:

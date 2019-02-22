@@ -74,7 +74,9 @@ def embedding_paths(params):
     """
     _, data_dir, processed_dir, _ = get_directories(params)
     paths = []
-    for embed_type in constants.EmbeddingTypes.as_list():
+    embed_types = [constants.EmbeddingTypes.WORD, constants.EmbeddingTypes.TRAINABLE, constants.EmbeddingTypes.CHAR]
+
+    for embed_type in embed_types:
         paths += [
             os.path.join(data_dir, processed_dir, constants.FileNames.EMBEDDINGS.format(embedding_type=embed_type))
         ]

@@ -16,8 +16,8 @@
   "max_chars": 2500,
   "oov_token": "<OOV>",
   "trainable_words": [
-    "<OOV>", "<hashtag>", "<allcaps>", "</hashtag>", "<smile>", "<lolface>", "<neutralface>", "<kisses>",
-    "<url>", "<email>", "<user>", "<date>", "<time>", "<currency>", "<percent>", "<score>", "<number>", "<empty>"
+    "<OOV>", "-hashtag-", "-allcaps-", "-/hashtag-", "-smile-", "-lolface-", "-neutralface-", "-kisses-",
+    "-url-", "-email-", "-user-", "-date-", "-time-", "-currency-", "-percent-", "-score-", "-number-", "-empty-"
   ],
   "min_words": -1,
   "min_chars": -1,
