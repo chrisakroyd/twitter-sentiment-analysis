@@ -77,6 +77,21 @@ def index_from_list(words, skip_zero=True):
     return {word: (i+1) if skip_zero else i for i, word in enumerate(words)}
 
 
+def file_exists(path):
+    """ Tests whether or not a full filepath exists. """
+    return os.path.exists(path)
+
+
+def directory_exists(path):
+    """ Tests whether or not a directory exists. """
+    return os.path.isdir(path)
+
+
+def directory_is_empty(path):
+    """ Tests whether or not a directory is empty. """
+    return len(os.listdir(path)) == 0
+
+
 def make_dirs(directories):
     """ Creates non-existent directories.
         Args:

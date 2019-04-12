@@ -5,6 +5,7 @@
   "embeddings_path": "E:/data_sets/glove/glove.840B.300d.txt",
   "data_dir": "./data/",
   "dist_dir": "./dist",
+  "raw_data_dir": "./data/raw",
   "models_dir": "./models/",
   "demo_server_port": 5000,
   "embed_dim": 300,

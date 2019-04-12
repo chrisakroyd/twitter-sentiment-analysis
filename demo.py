@@ -3,7 +3,7 @@ import random
 import numpy as np
 import tensorflow as tf
 # from src import config, constants, demo_utils, models, pipeline, preprocessing as prepro, train_utils, util
-from src import config, constants, demo_utils, models, pipeline, train_utils, util
+from src import config, constants, demo_utils, models, pipeline, train_utils, util, tokenizer as toke
 from src.preprocessor import TextPreProcessor
 
 API_VERSION = 1
@@ -28,7 +28,7 @@ def demo(sess_config, params):
     app = Flask(__name__, static_folder=params.dist_dir)
     app.after_request(add_cors_headers)
 
-    _, _, model_dir, _ = util.train_paths(params)
+    model_dir, _ = util.save_paths(params)
     word_index_path, _, char_index_path = util.index_paths(params)
     examples_path = util.examples_path(params)
     embedding_paths = util.embedding_paths(params)
@@ -40,7 +40,7 @@ def demo(sess_config, params):
     reverse_classes = {value: key for key, value in classes.items()}
 
     preprocessor = TextPreProcessor()
-    tokenizer = util.Tokenizer(lower=False,
+    tokenizer = toke.Tokenizer(lower=False,
                                oov_token=params.oov_token,
                                word_index=word_index,
                                char_index=char_index,
@@ -76,7 +76,7 @@ def demo(sess_config, params):
                                                             data, error_code=1)), BAD_REQUEST_CODE
 
         text = preprocessor.preprocess(data['text'])
-        tokens = tokenizer.tokenize(text)
+        tokens, modified_tokens = tokenizer.tokenize(text)
 
         if len(data['text']) <= 0 or len(tokens) <= 0:
             return json.dumps(demo_utils.get_error_response(constants.ErrorMessages.INVALID_TEXT,

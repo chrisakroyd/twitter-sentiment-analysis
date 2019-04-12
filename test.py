@@ -4,11 +4,11 @@ from src import config, constants, metrics, models, pipeline, train_utils, util
 
 
 def test(sess_config, params):
-    _, out_dir, model_dir, log_dir = util.train_paths(params)
+    model_dir, log_dir = util.save_paths(params)
     word_index_path, _, char_index_path = util.index_paths(params)
     embedding_paths = util.embedding_paths(params)
     meta_path = util.meta_path(params)
-    util.make_dirs([out_dir, model_dir, log_dir])
+    util.make_dirs([model_dir, log_dir])
 
     vocabs = util.load_vocab_files(paths=(word_index_path, char_index_path))
     word_matrix, trainable_matrix, character_matrix = util.load_numpy_files(paths=embedding_paths)
@@ -17,7 +17,7 @@ def test(sess_config, params):
 
     with tf.device('/cpu:0'):
         tables = pipeline.create_lookup_tables(vocabs)
-        val_tfrecords = util.tf_record_paths(params, training=False)
+        _, val_tfrecords = util.tf_record_paths(params)
         val_set, iterator = pipeline.create_pipeline(params, tables, val_tfrecords, num_classes, training=False)
 
     with tf.Session(config=sess_config) as sess:

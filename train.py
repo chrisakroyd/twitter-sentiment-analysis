@@ -5,11 +5,11 @@ from src import config, constants, metrics, models, pipeline, train_utils, util
 
 
 def train(sess_config, params):
-    _, out_dir, model_dir, log_dir = util.train_paths(params)
+    model_dir, log_dir = util.save_paths(params)
     word_index_path, _, char_index_path, pos_index_path = util.index_paths(params)
     embedding_paths = util.embedding_paths(params)
     meta_path = util.meta_path(params)
-    util.make_dirs([out_dir, model_dir, log_dir])
+    util.make_dirs([model_dir, log_dir])
 
     vocabs = util.load_vocab_files(paths=(word_index_path, char_index_path, pos_index_path))
     word_matrix, trainable_matrix, character_matrix = util.load_numpy_files(paths=embedding_paths)
@@ -20,8 +20,7 @@ def train(sess_config, params):
     with tf.device('/cpu:0'):
         tables = pipeline.create_lookup_tables(vocabs)
 
-        train_tfrecords = util.tf_record_paths(params, training=True)
-        val_tfrecords = util.tf_record_paths(params, training=False)
+        train_tfrecords, val_tfrecords = util.tf_record_paths(params)
         train_set, train_iter = pipeline.create_pipeline(params, tables, train_tfrecords, num_classes, num_tags, training=True)
         _, val_iter = pipeline.create_pipeline(params, tables, val_tfrecords, num_classes, num_tags, training=False)
 
@@ -77,14 +76,13 @@ def train(sess_config, params):
 
         for _ in range(int(total_steps - global_step)):
             global_step = sess.run(model.global_step) + 1
-            # loss, pred, label, _ = sess.run(fetches=train_outputs, feed_dict={handle: train_handle})
             recall, precision, f1, _ = sess.run(fetches=train_outputs, feed_dict={handle: train_handle})
             train_preds.append((recall, precision, f1, ))
             pbar.update()
             # Save at the end of each epoch
             if (global_step % (meta['num_train'] // params.batch_size)) == 0 or global_step == total_steps:
                 val_preds = []
-                for _ in range(meta['num_val']):
+                for _ in tqdm(range(meta['num_val'])):
                     recall, precision, f1 = sess.run(fetches=val_outputs,
                                                      feed_dict={
                                                         handle: val_handle,

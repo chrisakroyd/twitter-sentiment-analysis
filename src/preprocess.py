@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from src import util
+from src import util, tokenizer as toke
 from src.preprocessor import TextPreProcessor
 from sklearn.model_selection import train_test_split
 
@@ -87,8 +87,7 @@ def process(params, data, print_classes=True):
     directories = util.get_directories(params)
     util.make_dirs(directories)
     # path to save tf_records and a random sample of data.
-    train_record_path = util.tf_record_paths(params, training=True)
-    dev_record_path = util.tf_record_paths(params, training=False)
+    train_record_path, val_record_path = util.tf_record_paths(params)
     examples_path = util.examples_path(params)
     meta_path = util.meta_path(params)
     classes_path = util.classes_path(params)
@@ -104,7 +103,7 @@ def process(params, data, print_classes=True):
     embedding_index = util.read_embeddings_file(params.embeddings_path)
     vocab = set([e for e, _ in embedding_index.items()])
 
-    tokenizer = util.Tokenizer(max_words=params.max_words + 1,
+    tokenizer = toke.Tokenizer(max_words=params.max_words + 1,
                                max_chars=params.max_chars + 1,
                                vocab=vocab,
                                lower=False,
@@ -141,7 +140,7 @@ def process(params, data, print_classes=True):
     print('Num classes: ' + str(num_classes))
 
     write_as_tf_record(train_record_path, train)
-    write_as_tf_record(dev_record_path, val)
+    write_as_tf_record(val_record_path, val)
     examples = get_examples(train)
     meta = {
         'num_train': len(train),

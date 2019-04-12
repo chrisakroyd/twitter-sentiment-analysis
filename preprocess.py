@@ -5,6 +5,13 @@ def preprocess(params):
     dataset = params.dataset.lower().strip()
     util.make_dirs(util.get_directories(params))
 
+    output_dir = util.processed_data_directory(params)
+
+    # Prompt user for confirmation if this action overwrites existing data.
+    if util.directory_exists(output_dir) and not util.directory_is_empty(output_dir):
+        if not util.yes_no_prompt(constants.Prompts.DATA_EXISTS):
+            exit(0)
+
     if dataset == constants.Datasets.SEM_EVAL:
         data = prepro.get_data_sem_eval(constants.FilePaths.SEM_EVAL)
         prepro.process(params, data)

@@ -66,7 +66,7 @@ class DirNames:
     CHECKPOINTS = 'checkpoints'
     LOGS = 'logs'
     RECORDS = 'records'
-    PROCESSED = 'processed_{}'
+    PROCESSED = 'processed'
     EMBEDDINGS = 'embeddings'
     SQUAD_1 = Datasets.SEM_EVAL
     SQUAD_2 = Datasets.SENT_140
@@ -119,3 +119,11 @@ class ErrorMessages:
     NO_TOKENS = 'Text key missing from body of POST request.'
     INVALID_TEXT = 'Text must be longer than 0 excluding space characters.'
     INVALID_TOKENS = 'Text must be longer than 0 excluding space characters.'
+
+
+class Prompts:
+    """ Prompt messages for asking user actions
+        DATA_EXISTS: Prompt for confirming a non-reversible overwriting of data.
+    """
+    DATA_EXISTS = 'Preprocessed data already exists for this dataset, would you like to overwrite?'
+    FOUND_CONFIG_NO_CHECKPOINTS = 'Found config file at {path} without any checkpoints, would you like to use this config?'
