@@ -11,7 +11,7 @@ class LSTMAttention(tf.keras.models.Model):
         self.dropout = tf.placeholder_with_default(params.dropout, (), name='dropout')
         self.attn_dropout = tf.placeholder_with_default(params.attn_dropout, (), name='attn_dropout')
 
-        self.embedding = models.EmbeddingLayer(embedding_matrix, trainable_matrix, char_matrix,
+        self.embedding = layers.EmbeddingLayer(embedding_matrix, trainable_matrix, char_matrix,
                                                word_dim=params.embed_dim, char_dim=params.char_dim,
                                                word_dropout=self.dropout, char_dropout=self.dropout / 2)
 
