@@ -1,24 +1,19 @@
 import tensorflow as tf
+from src import layers
 
 
 class Attention(tf.keras.layers.Layer):
-    def __init__(self,
-                 kernel_initializer='glorot_uniform',
-                 kernel_regularizer=None,
-                 return_attention=False,
+    def __init__(self, return_attention=False, epsilon=1e-07,
                  **kwargs):
         super(Attention, self).__init__(**kwargs)
         self.supports_masking = True
-        self.kernel_initializer = tf.keras.initializers.get(kernel_initializer)
-        self.kernel_regularizer = tf.keras.regularizers.get(kernel_regularizer)
         self.return_attention = return_attention
+        self.epsilon = epsilon
 
     def build(self, input_shape):
         assert len(input_shape) == 3
         self.kernel = self.add_weight(shape=(int(input_shape[-1]), 1, ),
-                                      initializer=self.kernel_initializer,
                                       name='{}_W'.format(self.name),
-                                      regularizer=self.kernel_regularizer,
                                       trainable=True)
         self.built = True
 
@@ -32,13 +27,12 @@ class Attention(tf.keras.layers.Layer):
         eij = tf.squeeze(tf.keras.backend.dot(x, self.kernel), axis=-1)
         eij = tf.tanh(eij)
 
-        # apply mask.
         if mask is not None:
-            eij *= tf.cast(mask, tf.float32)
+            eij = layers.apply_mask(eij, mask)
 
         a = tf.exp(eij)
 
-        a /= tf.cast(tf.reduce_sum(a, axis=1, keepdims=True) + tf.keras.backend.epsilon(), tf.float32)
+        a /= tf.cast(tf.reduce_sum(a, axis=1, keepdims=True) + tf.keras.backend.epsilon(), dtype=tf.float32)
         att_weights = a
 
         weighted_input = x * tf.expand_dims(a, axis=-1)

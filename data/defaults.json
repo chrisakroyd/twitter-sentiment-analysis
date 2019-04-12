@@ -23,7 +23,7 @@
   "min_chars": -1,
   "bucket": true,
   "bucket_ranges": [],
-  "bucket_size": 40,
+  "bucket_size": 20,
   "shuffle_buffer_size": 15000,
   "tf_record_buffer_size": 1024,
   "use_elmo": false,
@@ -43,8 +43,5 @@
   "beta2": 0.999,
   "epsilon": 1e-7,
   "ema_decay": 0.999,
-  "train_steps": 60000,
-  "run_val_every": 1000,
-  "checkpoint_every": 1000,
   "write_answer_file": false
 }

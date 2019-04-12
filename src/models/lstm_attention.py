@@ -32,7 +32,7 @@ class LSTMAttention(tf.keras.models.Model):
 
     def call(self, x, training=None, mask=None):
         words, chars, tags, num_tokens = x
-
+        attn_mask = layers.create_mask(num_tokens, maxlen=tf.reduce_max(num_tokens))
         text_emb = self.embedding([words, chars], training=training)
 
         text_emb = tf.concat([text_emb, tags], axis=-1)
@@ -43,7 +43,7 @@ class LSTMAttention(tf.keras.models.Model):
         rnn_2_out = self.rnn_2(rnn_1_out)
         rnn_2_out = self.drop_2(rnn_2_out, training=training)
 
-        attn_out, attn_weights = self.attention(rnn_2_out)
+        attn_out, attn_weights = self.attention(rnn_2_out, mask=attn_mask)
         attn_out = self.drop_3(attn_out, training=training)
 
         logits = self.out(attn_out)
@@ -56,7 +56,9 @@ class LSTMAttention(tf.keras.models.Model):
         loss = tf.reduce_mean(loss)
 
         if l2 is not None and l2 > 0.0:
-            l2_loss = train_utils.l2_ops(l2)
+            variables = tf.trainable_variables()
+            variables = [v for v in variables if 'bias' not in v.name and 'scale' not in v.name]
+            l2_loss = train_utils.l2_ops(l2, variables=variables)
             loss = loss + l2_loss
 
         return loss

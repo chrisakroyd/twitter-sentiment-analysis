@@ -78,6 +78,4 @@ def model_config(defaults):
     flags.DEFINE_integer('warmup_steps', defaults.warmup_steps, 'Number of warmup steps.')
     flags.DEFINE_integer('epochs', defaults.epochs, 'Number of epochs to train for.')
     flags.DEFINE_string('warmup_scheme', defaults.warmup_scheme, 'Learning rate warmup scheme.')
-    flags.DEFINE_integer('checkpoint_every', defaults.checkpoint_every, 'After how many steps do we save a checkpoint.')
-    flags.DEFINE_integer('run_val_every', defaults.run_val_every, 'After how many steps do we calculate EM/F1 scores.')
     return flags

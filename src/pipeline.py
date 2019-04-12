@@ -39,14 +39,11 @@ def index_lookup(data, tables, char_limit=16, num_parallel_calls=4):
         To save memory + hard drive space we store contexts and queries as tokenised strings. Therefore we need
         to perform two tasks; Extract characters and map words + chars to an index for the embedding layer.
 
-        @TODO This is a pretty ugly solution to support labelled/unlabelled modes, refactor target?
-
         Args:
             data: A `tf.data.Dataset` object.
             tables: A tuple of contrib.lookup tables mapping string words to indices and string characters to indices.
             char_limit: Max number of characters per word.
             num_parallel_calls: An int for how many parallel lookups we perform.
-            has_labels: Include labels in the output dict.
         Returns:
             A `tf.data.Dataset` object.
     """
@@ -74,7 +71,7 @@ def index_lookup(data, tables, char_limit=16, num_parallel_calls=4):
     return data
 
 
-def format_output(data, num_classes, num_tags, num_parallel_calls=4):
+def post_processing(data, num_classes, num_tags, num_parallel_calls=4):
     """ Casts tensors to their intended dtypes and converts label tensor to be one-hot. """
 
     def _lookup(fields):
@@ -113,8 +110,6 @@ def create_buckets(bucket_size, max_size, bucket_ranges=None):
 
 def get_padded_shapes(max_tokens=-1, max_characters=16, num_classes=2, num_tags=50, has_labels=True):
     """ Creates a dict of key: shape mappings for padding batches.
-
-        @TODO This is a pretty ugly solution to support labelled/unlabelled modes, refactor target?
 
         Args:
             max_tokens: Max size of the context, -1 to pad to max within the batch.
@@ -185,9 +180,7 @@ def create_pipeline(params, tables, record_paths, num_classes, num_tags, trainin
     # Perform word -> index mapping.
     data = index_lookup(data, tables, char_limit=params.char_limit,
                         num_parallel_calls=parallel_calls)
-    data = format_output(data, num_classes, num_tags, num_parallel_calls=parallel_calls)
-    padded_shapes = get_padded_shapes(max_tokens=params.max_tokens, max_characters=params.char_limit,
-                                      num_classes=num_classes, num_tags=num_tags)
+    data = post_processing(data, num_classes, num_tags, num_parallel_calls=parallel_calls)
 
     if params.bucket and training:
         buckets = create_buckets(params.bucket_size, params.max_tokens, params.bucket_ranges)
@@ -197,10 +190,11 @@ def create_pipeline(params, tables, record_paths, num_classes, num_tags, trainin
 
         data = data.apply(
             tf.data.experimental.bucket_by_sequence_length(element_length_func=length_fn,
-                                                           padded_shapes=padded_shapes,
                                                            bucket_batch_sizes=[params.batch_size] * (len(buckets) + 1),
                                                            bucket_boundaries=buckets))
     else:
+        padded_shapes = get_padded_shapes(max_characters=params.char_limit,
+                                          num_classes=num_classes, num_tags=num_tags)
         data = data.padded_batch(
             batch_size=params.batch_size,
             padded_shapes=padded_shapes,
