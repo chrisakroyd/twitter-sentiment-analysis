@@ -114,11 +114,13 @@ class ErrorMessages:
         * NO_TOKENS: Key for tokens missing.
         * INVALID_TEXT: Text field is invalid.
         * INVALID_TOKENS: Tokens field is invalid.
+        * INVALID_WARMUP_STEPS: warmup_steps parameter is negative.
     """
     NO_TEXT = 'Text key missing from body of POST request.'
     NO_TOKENS = 'Text key missing from body of POST request.'
     INVALID_TEXT = 'Text must be longer than 0 excluding space characters.'
     INVALID_TOKENS = 'Text must be longer than 0 excluding space characters.'
+    INVALID_WARMUP_STEPS = 'Warmup steps parameter cannot be negative, got {steps}.'
 
 
 class Prompts:

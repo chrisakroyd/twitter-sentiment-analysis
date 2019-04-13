@@ -1,5 +1,6 @@
 import tensorflow as tf
 import warnings
+from src import constants
 
 
 def ema_ops(train_op, decay, variables=None):
@@ -66,6 +67,11 @@ def inverse_exponential_warmup(learn_rate, warmup_steps=1000, global_step=None):
     else:
         tf.train.assert_global_step(global_step)
 
+    if warmup_steps < 0:
+        raise ValueError(constants.ErrorMessages.INVALID_WARMUP_STEPS.format(steps=warmup_steps))
+    elif warmup_steps == 0:
+        return learn_rate
+
     lr_decay = learn_rate / tf.log(tf.to_float(warmup_steps)) * tf.log(tf.to_float(global_step) + 1)
     return tf.minimum(learn_rate, lr_decay)
 
@@ -84,6 +90,11 @@ def linear_warmup(learn_rate, warmup_steps=1000, global_step=None):
     else:
         tf.train.assert_global_step(global_step)
 
+    if warmup_steps < 0:
+        raise ValueError(constants.ErrorMessages.INVALID_WARMUP_STEPS.format(steps=warmup_steps))
+    elif warmup_steps == 0:
+        return learn_rate
+
     lr_decay = tf.minimum(1.0, tf.to_float(global_step) / warmup_steps)
     return lr_decay * learn_rate
 
@@ -98,6 +109,11 @@ def get_warmup_scheme(name, learn_rate, warmup_steps=1000, global_step=None):
         Returns:
             An op to calculate the learn rate at a given step.
     """
+    if warmup_steps < 0:
+        raise ValueError(constants.ErrorMessages.INVALID_WARMUP_STEPS.format(steps=warmup_steps))
+    elif warmup_steps == 0:
+        return learn_rate
+
     name = name.lower().strip()
     if name == 'linear':
         return linear_warmup(learn_rate, warmup_steps, global_step)
