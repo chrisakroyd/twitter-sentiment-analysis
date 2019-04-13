@@ -1,12 +1,11 @@
 import tensorflow as tf
-from tensorflow.keras.layers import Activation, Bidirectional, CuDNNLSTM, Dense, Dropout
-
+from tensorflow.keras.layers import Activation, Bidirectional, CuDNNLSTM, Dense, Dropout, GlobalAveragePooling1D, GlobalMaxPool1D
 from src import layers, train_utils
 
 
-class LSTMAttention(tf.keras.Model):
+class LSTMTopKPool(tf.keras.Model):
     def __init__(self, embedding_matrix, char_matrix, trainable_matrix, num_classes, params, **kwargs):
-        super(LSTMAttention, self).__init__(**kwargs)
+        super(LSTMTopKPool, self).__init__(**kwargs)
         self.global_step = tf.train.get_or_create_global_step()
         self.dropout = tf.placeholder_with_default(params.dropout, (), name='dropout')
         self.attn_dropout = tf.placeholder_with_default(params.attn_dropout, (), name='attn_dropout')
@@ -23,7 +22,9 @@ class LSTMAttention(tf.keras.Model):
 
         self.drop_2 = Dropout(self.dropout, name='bi_gru_2_dropout')
 
-        self.attention = layers.Attention(return_attention=True)
+        self.average_pool = GlobalAveragePooling1D()
+        self.max_pool = GlobalMaxPool1D()
+        self.top_k_pool = layers.TopKPooling(k=5)
 
         self.drop_3 = Dropout(self.attn_dropout, name='attention_dropout')
 
@@ -32,7 +33,6 @@ class LSTMAttention(tf.keras.Model):
 
     def call(self, x, training=None, mask=None):
         words, chars, tags, num_tokens = x
-        attn_mask = layers.create_mask(num_tokens, maxlen=tf.reduce_max(num_tokens))
         text_emb = self.embedding([words, chars], training=training)
 
         text_emb = tf.concat([text_emb, tags], axis=-1)
@@ -43,13 +43,15 @@ class LSTMAttention(tf.keras.Model):
         rnn_2_out = self.rnn_2(rnn_1_out)
         rnn_2_out = self.drop_2(rnn_2_out, training=training)
 
-        attn_out, attn_weights = self.attention(rnn_2_out, mask=attn_mask)
-        attn_out = self.drop_3(attn_out, training=training)
+        average_pool = self.average_pool(rnn_2_out)
+        max_pool = self.max_pool(rnn_2_out)
+        top_k_pool = self.top_k_pool(rnn_2_out)
 
-        logits = self.out(attn_out)
+        pooled = tf.concat([average_pool, max_pool, top_k_pool], axis=-1)
+        logits = self.out(pooled)
         preds = self.preds(logits)
 
-        return logits, preds, attn_weights
+        return logits, preds
 
     def compute_loss(self, logits, labels, l2=None):
         loss = tf.nn.softmax_cross_entropy_with_logits_v2(logits=logits, labels=labels)
