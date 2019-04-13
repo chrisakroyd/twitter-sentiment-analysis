@@ -82,7 +82,7 @@ def train(sess_config, params):
             # Save at the end of each epoch
             if (global_step % (meta['num_train'] // params.batch_size)) == 0 or global_step == total_steps:
                 val_preds = []
-                for _ in tqdm(range(meta['num_val'])):
+                for _ in tqdm(range(meta['num_val'] // params.batch_size)):
                     recall, precision, f1 = sess.run(fetches=val_outputs,
                                                      feed_dict={
                                                         handle: val_handle,
