@@ -121,6 +121,9 @@ class ErrorMessages:
     INVALID_TEXT = 'Text must be longer than 0 excluding space characters.'
     INVALID_TOKENS = 'Text must be longer than 0 excluding space characters.'
     INVALID_WARMUP_STEPS = 'Warmup steps parameter cannot be negative, got {steps}.'
+    INVALID_RNN_TYPE = 'RNN type invalid, expected one of LSTM, GRU. Got {rnn_type}.'
+    INVALID_MODEL_TYPE = 'Model type invalid, expected one of attention, conc_pool, pool. Got {model_type}'
+    DEMO_UNSUPPORTED_MODEL = 'Demo mode only supports attention model. Got {model_type}'
 
 
 class Prompts:
@@ -129,3 +132,23 @@ class Prompts:
     """
     DATA_EXISTS = 'Preprocessed data already exists for this dataset, would you like to overwrite?'
     FOUND_CONFIG_NO_CHECKPOINTS = 'Found config file at {path} without any checkpoints, would you like to use this config?'
+
+
+class RNNTypes:
+    """ Possible values of the rnn_type parameter
+        LSTM: String command for LSTM rnn.
+        GRU: String command for GRU rnn.
+    """
+    LSTM = 'lstm'
+    GRU = 'gru'
+
+
+class ModelTypes:
+    """ Possible values of the model_type parameter.
+        ATTENTION: String command for an attention model.
+        CONC_POOL: String command for a concatenate pooling model.
+        POOL: String command for a regular pooling model.
+    """
+    ATTENTION = 'attention'
+    CONC_POOL = 'conc_pool'
+    POOL = 'pool'

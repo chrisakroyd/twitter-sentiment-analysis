@@ -32,7 +32,7 @@
   "max_prefetch": 5,
   "batch_size": 32,
   "hidden_units": 128,
-  "dropout": 0.1,
+  "dropout": 0.3,
   "attn_dropout": 0.1,
   "l2": 3e-7,
   "gradient_clip": 5.0,
@@ -44,5 +44,13 @@
   "beta2": 0.999,
   "epsilon": 1e-7,
   "ema_decay": 0.999,
-  "write_answer_file": false
+  "write_answer_file": false,
+  "cudnn": true,
+  "rnn_type": "lstm",
+  "rnn_layers": 2,
+  "model_type": "attention",
+  "use_top_k": true,
+  "top_k": 5,
+  "use_pos_tags": false,
+  "use_rnn_skip_connection": false
 }

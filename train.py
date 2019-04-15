@@ -29,13 +29,24 @@ def train(sess_config, params):
         handle = tf.placeholder(tf.string, shape=[])
         iterator = tf.data.Iterator.from_string_handle(handle, train_set.output_types, train_set.output_shapes)
 
-        model = models.LSTMAttention(word_matrix, character_matrix, trainable_matrix, num_classes, params)
+        if params.model_type == constants.ModelTypes.ATTENTION:
+            model = models.AttentionModel(word_matrix, character_matrix, trainable_matrix, num_classes, params)
+        elif params.model_type == constants.ModelTypes.CONC_POOL:
+            model = models.ConcatPoolingModel(word_matrix, character_matrix, trainable_matrix, num_classes, params)
+        elif params.model_type == constants.ModelTypes.POOL:
+            model = models.PoolingModel(word_matrix, character_matrix, trainable_matrix, num_classes, params)
+        else:
+            raise ValueError(constants.ErrorMessages.INVALID_MODEL_TYPE.format(model_type=params.model_type))
 
         placeholders = iterator.get_next()
         # Features and labels.
         model_inputs = train_utils.inputs_as_tuple(placeholders)
         label_tensor = train_utils.labels_as_tuple(placeholders)[0]
-        logits, prediction, _ = model(model_inputs, training=True)
+
+        if params.model_type == constants.ModelTypes.ATTENTION:
+            logits, prediction, _ = model(model_inputs, training=True)
+        else:
+            logits, prediction = model(model_inputs, training=True)
 
         loss_op = model.compute_loss(logits, label_tensor, l2=params.l2)
 

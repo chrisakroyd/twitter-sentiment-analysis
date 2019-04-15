@@ -62,22 +62,32 @@ def model_config(defaults):
     flags.DEFINE_integer('max_prefetch', defaults.max_prefetch, 'Max number of prefetched batches.')
     flags.DEFINE_boolean('use_elmo', defaults.use_elmo, 'Whether to use ELMo embeddings.')
     # Model hyper parameters (set to QANet paper values).
-    flags.DEFINE_integer('batch_size', defaults.batch_size, 'Batch Size')
+    flags.DEFINE_integer('batch_size', defaults.batch_size, 'Batch Size', lower_bound=1)
     flags.DEFINE_integer('hidden_units', defaults.hidden_units, 'Number of hidden units to use.')
     # Flags for train hyper params e.g. dropout, l2, gradient ema decay values (set to QANet paper values).
     flags.DEFINE_float('dropout', defaults.dropout, 'Dropout rate.', lower_bound=0.0, upper_bound=1.0)
     flags.DEFINE_float('attn_dropout', defaults.attn_dropout, 'Attention dropout rate.',
                        lower_bound=0.0, upper_bound=1.0)
-    flags.DEFINE_float('l2', defaults.l2, 'L2 weight decay.')
-    flags.DEFINE_float('gradient_clip', defaults.gradient_clip, 'Clip by global norm value.')
-    flags.DEFINE_float('learn_rate', defaults.learn_rate, 'Learning rate.')
+    flags.DEFINE_float('l2', defaults.l2, 'L2 weight decay.', lower_bound=0.0)
+    flags.DEFINE_float('gradient_clip', defaults.gradient_clip, 'Clip by global norm value.', lower_bound=0.0)
+    flags.DEFINE_float('learn_rate', defaults.learn_rate, 'Learning rate.', lower_bound=0.0)
     flags.DEFINE_float('beta1', defaults.beta1, 'Beta 1 parameter of adam optimizer.', lower_bound=0.0, upper_bound=1.0)
     flags.DEFINE_float('beta2', defaults.beta2, 'Beta 2 parameter of adam optimizer.', lower_bound=0.0, upper_bound=1.0)
     flags.DEFINE_float('epsilon', defaults.epsilon, 'Value for epsilon.')
     flags.DEFINE_float('ema_decay', defaults.ema_decay, 'Exponential moving average decay rate.',
                        lower_bound=0.0, upper_bound=1.0)
     # Train specific flags e.g. number of steps, early stop, eval period.
-    flags.DEFINE_integer('warmup_steps', defaults.warmup_steps, 'Number of warmup steps.')
-    flags.DEFINE_integer('epochs', defaults.epochs, 'Number of epochs to train for.')
+    flags.DEFINE_integer('warmup_steps', defaults.warmup_steps, 'Number of warmup steps.', lower_bound=0)
+    flags.DEFINE_integer('epochs', defaults.epochs, 'Number of epochs to train for.', lower_bound=1)
     flags.DEFINE_string('warmup_scheme', defaults.warmup_scheme, 'Learning rate warmup scheme.')
+
+    # Command line switching between RNN/models support.
+    flags.DEFINE_string('rnn_type', defaults.rnn_type, 'RNN Type, either lstm or gru.')
+    flags.DEFINE_boolean('use_rnn_skip_connection', defaults.use_rnn_skip_connection, 'Use skip connections between RNN layers')
+    flags.DEFINE_boolean('cudnn', defaults.cudnn, 'Use CudNN RNN implementations.')
+    flags.DEFINE_string('model_type', defaults.model_type, 'Model type to use, options are attention, pool, conc_pool.')
+    flags.DEFINE_boolean('use_top_k', defaults.use_top_k, 'Use top-k pooling in pooling models.')
+    flags.DEFINE_integer('top_k', defaults.top_k, 'Number of ', lower_bound=2)
+    flags.DEFINE_boolean('use_pos_tags', defaults.use_pos_tags, 'Include pos_tags as a feature.')
+
     return flags

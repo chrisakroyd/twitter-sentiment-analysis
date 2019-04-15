@@ -14,23 +14,36 @@ def test(sess_config, params):
     word_matrix, trainable_matrix, character_matrix = util.load_numpy_files(paths=embedding_paths)
     meta = util.load_json(meta_path)
     num_classes = meta['num_classes']
+    num_tags = meta['num_tags']
 
     with tf.device('/cpu:0'):
         tables = pipeline.create_lookup_tables(vocabs)
         _, val_tfrecords = util.tf_record_paths(params)
-        val_set, iterator = pipeline.create_pipeline(params, tables, val_tfrecords, num_classes, training=False)
+        val_set, iterator = pipeline.create_pipeline(params, tables, val_tfrecords, num_classes, num_tags,
+                                                     training=False)
 
     with tf.Session(config=sess_config) as sess:
         sess.run(iterator.initializer)
         sess.run(tf.tables_initializer())
 
-        model = models.LSTMAttention(word_matrix, character_matrix, trainable_matrix, num_classes, params)
+        if params.model_type == constants.ModelTypes.ATTENTION:
+            model = models.AttentionModel(word_matrix, character_matrix, trainable_matrix, num_classes, params)
+        elif params.model_type == constants.ModelTypes.CONC_POOL:
+            model = models.ConcatPoolingModel(word_matrix, character_matrix, trainable_matrix, num_classes, params)
+        elif params.model_type == constants.ModelTypes.POOL:
+            model = models.PoolingModel(word_matrix, character_matrix, trainable_matrix, num_classes, params)
+        else:
+            raise ValueError(constants.ErrorMessages.INVALID_MODEL_TYPE.format(model_type=params.model_type))
 
         placeholders = iterator.get_next()
         # Features and labels.
         model_inputs = train_utils.inputs_as_tuple(placeholders)
         label_tensor = train_utils.labels_as_tuple(placeholders)[0]
-        logits, prediction, _ = model(model_inputs, training=False)
+
+        if params.model_type == constants.ModelTypes.ATTENTION:
+            logits, prediction, _ = model(model_inputs, training=False)
+        else:
+            logits, prediction = model(model_inputs, training=False)
 
         recall = metrics.recall(label_tensor, prediction)
         precision = metrics.precision(label_tensor, prediction)

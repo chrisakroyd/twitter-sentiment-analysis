@@ -54,12 +54,17 @@ def demo(sess_config, params):
     sess = tf.Session(config=sess_config)
     sess.run(tf.tables_initializer())
     # Initialise the model, pipelines + placeholders.
-    model = models.LSTMAttention(word_matrix, character_matrix, trainable_matrix, meta['num_classes'], params)
+    model = models.AttentionModel(word_matrix, character_matrix, trainable_matrix, meta['num_classes'], params)
     pipeline_placeholders = pipeline.create_placeholders()
     demo_dataset, demo_iter = pipeline.create_demo_pipeline(params, tables, pipeline_placeholders)
     demo_placeholders = demo_iter.get_next()
     demo_inputs = train_utils.inputs_as_tuple(demo_placeholders)
-    logits, prediction, attn_weights = model(demo_inputs)
+
+    if params.model_type == constants.ModelTypes.ATTENTION:
+        logits, prediction, attn_weights = model(demo_inputs, training=False)
+
+    else:
+        raise ValueError(constants.ErrorMessages.DEMO_UNSUPPORTED_MODEL.format(model_type=params.model_type))
 
     demo_outputs = [logits, prediction, attn_weights]
     sess.run(tf.global_variables_initializer())
