@@ -9,7 +9,7 @@ class RNNBlock(tf.keras.Model):
             architectures based on command line / automated input.
 
             Block Structure:
-               IN -> RNN -> Dropout -> Output
+               IN -> RNN -> Skip Connection (Opt) -> Dropout -> OUT
 
             Args:
                 rnn_type: Type of RNN, valid options are 'lstm' and 'gru'
@@ -52,5 +52,35 @@ class RNNBlock(tf.keras.Model):
             output = output + x
 
         output = self.dropout(output, training=training)
-
         return output
+
+
+class RNNStack(tf.keras.layers.Layer):
+    def __init__(self, rnn_type, units, num_layers, return_sequences=True, cudnn=True, bidirectional=True,
+                 dropout=0.1, skip_connection=False, **kwargs):
+        """ Builds a stack of RNN blocks.
+
+            TODO: Should be a tf.keras.Model, but throws no property error when it is, 0 impact but revist later.
+
+            Args:
+                rnn_type: Type of RNN, valid options are 'lstm' and 'gru'
+                units: Number of units in this layer.
+                num_layers: Number of RNN layers.
+                return_sequences: See return_sequences parameter of keras LSTM/GRU.
+                return_state: See return_state parameter of keras LSTM/GRU.
+                cudnn: Whether or not to use the CuDNN implementation of the given rnn_type.
+                bidirectional: Whether or not this is a bidirectional RNN and should be wrapped as such.
+                dropout: The fraction of units to be dropped.
+            Returns:
+                An initialized Keras RNN layer.
+        """
+        super(RNNStack, self).__init__(**kwargs)
+        self.rnn_layers = [RNNBlock(rnn_type, units, dropout=dropout,
+                                    skip_connection=skip_connection, cudnn=cudnn,
+                                    bidirectional=bidirectional, return_sequences=return_sequences)
+                           for _ in range(num_layers)]
+
+    def call(self, x, training=None, mask=None):
+        for rnn in self.rnn_layers:
+            x = rnn(x, training=training)
+        return x
