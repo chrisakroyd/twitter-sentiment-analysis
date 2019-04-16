@@ -32,8 +32,10 @@
   "max_prefetch": 5,
   "batch_size": 32,
   "hidden_units": 128,
-  "dropout": 0.3,
+  "word_dropout": 0.3,
+  "rnn_dropout": 0.3,
   "attn_dropout": 0.1,
+  "hidden_dropout": 0.5,
   "l2": 3e-7,
   "gradient_clip": 5.0,
   "learn_rate": 0.001,
@@ -48,9 +50,11 @@
   "cudnn": true,
   "rnn_type": "lstm",
   "rnn_layers": 2,
+  "hidden_layers": 2,
   "model_type": "attention",
   "use_top_k": true,
   "top_k": 5,
   "use_pos_tags": false,
-  "use_rnn_skip_connection": false
+  "use_rnn_skip_connection": false,
+  "use_hidden_skip_connection": true
 }

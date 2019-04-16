@@ -61,11 +61,13 @@ def model_config(defaults):
     flags.DEFINE_integer('parallel_calls', defaults.parallel_calls, 'Number of parallel calls for the pipeline.')
     flags.DEFINE_integer('max_prefetch', defaults.max_prefetch, 'Max number of prefetched batches.')
     flags.DEFINE_boolean('use_elmo', defaults.use_elmo, 'Whether to use ELMo embeddings.')
-    # Model hyper parameters (set to QANet paper values).
+    # Model hyper parameters.
     flags.DEFINE_integer('batch_size', defaults.batch_size, 'Batch Size', lower_bound=1)
     flags.DEFINE_integer('hidden_units', defaults.hidden_units, 'Number of hidden units to use.')
-    # Flags for train hyper params e.g. dropout, l2, gradient ema decay values (set to QANet paper values).
-    flags.DEFINE_float('dropout', defaults.dropout, 'Dropout rate.', lower_bound=0.0, upper_bound=1.0)
+    # Flags for train hyper params e.g. dropout, l2, gradient ema decay values.
+    flags.DEFINE_float('word_dropout', defaults.word_dropout, 'Dropout rate after Embedding layers.', lower_bound=0.0, upper_bound=1.0)
+    flags.DEFINE_float('rnn_dropout', defaults.rnn_dropout, 'Dropout rate after RNN layers.', lower_bound=0.0, upper_bound=1.0)
+    flags.DEFINE_float('hidden_dropout', defaults.hidden_dropout, 'Dropout rate on hidden layers.', lower_bound=0.0, upper_bound=1.0)
     flags.DEFINE_float('attn_dropout', defaults.attn_dropout, 'Attention dropout rate.',
                        lower_bound=0.0, upper_bound=1.0)
     flags.DEFINE_float('l2', defaults.l2, 'L2 weight decay.', lower_bound=0.0)
@@ -87,7 +89,10 @@ def model_config(defaults):
     flags.DEFINE_boolean('cudnn', defaults.cudnn, 'Use CudNN RNN implementations.')
     flags.DEFINE_string('model_type', defaults.model_type, 'Model type to use, options are attention, pool, conc_pool.')
     flags.DEFINE_boolean('use_top_k', defaults.use_top_k, 'Use top-k pooling in pooling models.')
-    flags.DEFINE_integer('top_k', defaults.top_k, 'Number of ', lower_bound=2)
+    flags.DEFINE_integer('top_k', defaults.top_k, 'Number of max-pool operations to perform.', lower_bound=2)
     flags.DEFINE_boolean('use_pos_tags', defaults.use_pos_tags, 'Include pos_tags as a feature.')
+    flags.DEFINE_integer('rnn_layers', defaults.rnn_layers, 'Number of rnn layers.', lower_bound=1)
+    flags.DEFINE_integer('hidden_layers', defaults.hidden_layers, 'Number of hidden layers.', lower_bound=0)
+    flags.DEFINE_boolean('use_hidden_skip_connection', defaults.use_hidden_skip_connection, 'Use skip connections between hidden layers.')
 
     return flags
