@@ -150,5 +150,5 @@ class ModelTypes:
         POOL: String command for a regular pooling model.
     """
     ATTENTION = 'attention'
-    CONC_POOL = 'conc_pool'
+    CONC_POOL = 'concat_pool'
     POOL = 'pool'

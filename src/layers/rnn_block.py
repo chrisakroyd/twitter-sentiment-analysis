@@ -23,6 +23,9 @@ class RNNBlock(tf.keras.Model):
                 An initialized Keras RNN layer.
         """
         super(RNNBlock, self).__init__(**kwargs)
+        self.rnn_type = rnn_type
+        self.return_state = return_state
+        self.bidirectional = bidirectional
 
         if rnn_type == constants.RNNTypes.GRU:
             if cudnn:
@@ -48,10 +51,28 @@ class RNNBlock(tf.keras.Model):
     def call(self, x, training=None, mask=None):
         output = self.rnn(x)
 
+        if self.return_state:
+            if self.bidirectional:
+                if self.rnn_type == constants.RNNTypes.GRU:
+                    output, forward_h, backward_h = output
+                else:
+                    output, forward_h, _, backward_h, _ = output
+
+                last_state = tf.concat([forward_h, backward_h], axis=-1)
+            else:
+                if self.rnn_type == constants.RNNTypes.GRU:
+                    output, last_state = output
+                else:
+                    output, last_state, _ = output
+
         if self.skip_connection:
             output = output + x
 
         output = self.dropout(output, training=training)
+
+        if self.return_state:
+            output = (output, last_state, )
+
         return output
 
 
