@@ -29,7 +29,7 @@ def demo(sess_config, params):
     app.after_request(add_cors_headers)
 
     model_dir, _ = util.save_paths(params)
-    word_index_path, _, char_index_path = util.index_paths(params)
+    word_index_path, _, char_index_path, pos_index_path = util.index_paths(params)
     examples_path = util.examples_path(params)
     embedding_paths = util.embedding_paths(params)
     meta_path = util.meta_path(params)
@@ -47,7 +47,7 @@ def demo(sess_config, params):
                                trainable_words=params.trainable_words,
                                filters=None)
 
-    vocabs = util.load_vocab_files(paths=(word_index_path, char_index_path))
+    vocabs = util.load_vocab_files(paths=(word_index_path, char_index_path, pos_index_path))
     word_matrix, trainable_matrix, character_matrix = util.load_numpy_files(paths=embedding_paths)
     tables = pipeline.create_lookup_tables(vocabs)
     # Keep sess alive as long as the server is live, probably not best practice but it works @TODO Improve this.
@@ -56,12 +56,13 @@ def demo(sess_config, params):
     # Initialise the model, pipelines + placeholders.
     model = models.AttentionModel(word_matrix, character_matrix, trainable_matrix, meta['num_classes'], params)
     pipeline_placeholders = pipeline.create_placeholders()
+    training_flag = tf.placeholder_with_default(False, (), name='training_flag')
     demo_dataset, demo_iter = pipeline.create_demo_pipeline(params, tables, pipeline_placeholders)
     demo_placeholders = demo_iter.get_next()
     demo_inputs = train_utils.inputs_as_tuple(demo_placeholders)
 
     if params.model_type == constants.ModelTypes.ATTENTION:
-        logits, prediction, attn_weights = model(demo_inputs, training=False)
+        logits, prediction, attn_weights = model(demo_inputs, training=training_flag)
 
     else:
         raise ValueError(constants.ErrorMessages.DEMO_UNSUPPORTED_MODEL.format(model_type=params.model_type))

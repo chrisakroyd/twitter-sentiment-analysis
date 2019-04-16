@@ -39,14 +39,15 @@ def train(sess_config, params):
             raise ValueError(constants.ErrorMessages.INVALID_MODEL_TYPE.format(model_type=params.model_type))
 
         placeholders = iterator.get_next()
+        training_flag = tf.placeholder_with_default(True, (), name='training_flag')
         # Features and labels.
         model_inputs = train_utils.inputs_as_tuple(placeholders)
         label_tensor = train_utils.labels_as_tuple(placeholders)[0]
 
         if params.model_type == constants.ModelTypes.ATTENTION:
-            logits, prediction, _ = model(model_inputs, training=True)
+            logits, prediction, _ = model(model_inputs, training=training_flag)
         else:
-            logits, prediction = model(model_inputs, training=True)
+            logits, prediction = model(model_inputs, training=training_flag)
 
         loss_op = model.compute_loss(logits, label_tensor, l2=params.l2)
 
@@ -97,8 +98,7 @@ def train(sess_config, params):
                     recall, precision, f1 = sess.run(fetches=val_outputs,
                                                      feed_dict={
                                                         handle: val_handle,
-                                                        model.dropout: 0.0,
-                                                        model.attn_dropout: 0.0,
+                                                        training_flag: False,
                                                       })
                     val_preds.append((recall, precision, f1, ))
 

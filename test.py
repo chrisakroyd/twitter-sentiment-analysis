@@ -5,12 +5,12 @@ from src import config, constants, metrics, models, pipeline, train_utils, util
 
 def test(sess_config, params):
     model_dir, log_dir = util.save_paths(params)
-    word_index_path, _, char_index_path = util.index_paths(params)
+    word_index_path, _, char_index_path, pos_index_path = util.index_paths(params)
     embedding_paths = util.embedding_paths(params)
     meta_path = util.meta_path(params)
     util.make_dirs([model_dir, log_dir])
 
-    vocabs = util.load_vocab_files(paths=(word_index_path, char_index_path))
+    vocabs = util.load_vocab_files(paths=(word_index_path, char_index_path, pos_index_path))
     word_matrix, trainable_matrix, character_matrix = util.load_numpy_files(paths=embedding_paths)
     meta = util.load_json(meta_path)
     num_classes = meta['num_classes']
@@ -36,14 +36,15 @@ def test(sess_config, params):
             raise ValueError(constants.ErrorMessages.INVALID_MODEL_TYPE.format(model_type=params.model_type))
 
         placeholders = iterator.get_next()
+        training_flag = tf.placeholder_with_default(False, (), name='training_flag')
         # Features and labels.
         model_inputs = train_utils.inputs_as_tuple(placeholders)
         label_tensor = train_utils.labels_as_tuple(placeholders)[0]
 
         if params.model_type == constants.ModelTypes.ATTENTION:
-            logits, prediction, _ = model(model_inputs, training=False)
+            logits, prediction, _ = model(model_inputs, training=training_flag)
         else:
-            logits, prediction = model(model_inputs, training=False)
+            logits, prediction = model(model_inputs, training=training_flag)
 
         recall = metrics.recall(label_tensor, prediction)
         precision = metrics.precision(label_tensor, prediction)
@@ -58,11 +59,7 @@ def test(sess_config, params):
         preds = []
         # +1 for uneven batch values, +1 for the range.
         for _ in tqdm(range(1, (meta['num_val'] // params.batch_size + 1) + 1)):
-            recall, precision, f1 = sess.run(test_outputs,
-                                             feed_dict={
-                                                 model.dropout: 0.0,
-                                                 model.attn_dropout: 0.0,
-                                             })
+            recall, precision, f1 = sess.run(test_outputs)
             preds.append((recall, precision, f1,))
 
         # Evaluate the predictions and reset the train result list for next eval period.
