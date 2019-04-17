@@ -34,6 +34,7 @@ class ConcatPoolingModel(tf.keras.Model):
         self.hidden_stack = layers.HiddenStack(hidden_units, params.hidden_layers, dropout=params.hidden_dropout,
                                                activation='relu', skip_connection=params.use_hidden_skip_connection)
 
+        self.pooled_dropout = Dropout(params.hidden_dropout)
         self.out = Dense(num_classes, name='output')
         self.preds = Activation('softmax')
 
@@ -56,6 +57,7 @@ class ConcatPoolingModel(tf.keras.Model):
             pooling_vectors = pooling_vectors + [top_k_pool]
 
         pooled = tf.concat(pooling_vectors, axis=-1)
+        pooled = self.pooled_dropout(pooled, training=training)
         pooled = self.hidden_stack(pooled, training=training)
 
         logits = self.out(pooled)
