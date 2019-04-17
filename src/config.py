@@ -17,6 +17,7 @@ def gpu_config():
 
 def model_config(defaults):
     flags = tf.flags
+    flags.DEFINE_boolean('help', False, 'Print flag help')
     # Mode to run in, e.g. train, test.
     flags.DEFINE_string('mode', defaults.mode, 'Train/test/demo.')
     flags.DEFINE_string('dataset', defaults.dataset, 'Which dataset to use, e.g. Squad or MS Marco.')

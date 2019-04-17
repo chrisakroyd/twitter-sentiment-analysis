@@ -1,9 +1,11 @@
 import json
 import glob
 import os
+from collections import ChainMap
 from types import SimpleNamespace
 import pandas as pd
 from tqdm import tqdm
+from src import constants, util
 
 
 class CorpusStats:
@@ -64,6 +66,40 @@ def namespace_json(path):
             A namespace object.
     """
     return SimpleNamespace(**load_json(path))
+
+
+def params_as_dict(params):
+    """
+        Converts all flags + values generated with the abseil-py flag (tf.flags) object into a flat python dict.
+        Args:
+            params: An instance of flags.Flags
+        Returns:
+            A flat dict of all flag parameters.
+    """
+    # Flags are segregated by the file they were defined in, reduce this down to a flat list of all our flags.
+    flag_modules = [{v.name: v.value for v in values} for _, values in params.flags_by_module_dict().items()]
+    full_flags = dict(ChainMap(*flag_modules))  # ChainMap == dictionary update within loop
+    return full_flags
+
+
+def load_config(params, path):
+    """ Loads a config if it exists and there's existing checkpoints, otherwise alerts the user and returns params."""
+    if file_exists(path):
+        if len(os.listdir(os.path.dirname(path))) == 1:  # Only have a model config, check if this is intentional.
+            if not util.yes_no_prompt(constants.Prompts.FOUND_CONFIG_NO_CHECKPOINTS.format(path=path)):
+                os.remove(path)  # Delete the config.
+                return params
+        print('Using config for {run_name} found at {path}...'.format(run_name=params.run_name, path=path))
+        return namespace_json(path)
+    else:
+        print('No existing config for {run_name}...'.format(run_name=params.run_name))
+        return params
+
+
+def save_config(params, path, overwrite=False):
+    """ Saves abseil-py flag (tf.flags) object as a .json formatted file. """
+    if not file_exists(path) or overwrite:
+        save_json(path, params_as_dict(params), indent=2)
 
 
 def index_from_list(words, skip_zero=True):

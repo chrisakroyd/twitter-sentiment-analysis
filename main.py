@@ -5,12 +5,21 @@ from preprocess import preprocess
 from demo import demo
 
 
-def main(sess_config, flags):
-    params = flags.FLAGS
+def main(sess_config, params):
+    if params.help:
+        print(params)
+        exit(0)
+
     mode = params.mode.lower().strip()
+
+    # If we are in modes other than download / pre-process load pre-existing configs.
+    if mode in {constants.Modes.TRAIN, constants.Modes.TEST, constants.Modes.DEMO, constants.Modes.DEBUG}:
+        params = util.load_config(params, util.config_path(params))  # Loads a pre-existing config otherwise == params
 
     if mode == constants.Modes.TRAIN:
         train(sess_config, params)
+    elif mode == constants.Modes.DEBUG:
+        train(sess_config, params, debug=True)
     elif mode == constants.Modes.TEST:
         test(sess_config, params)
     elif mode == constants.Modes.PREPROCESS:
@@ -25,4 +34,4 @@ def main(sess_config, flags):
 
 if __name__ == '__main__':
     defaults = util.namespace_json(path=constants.FilePaths.DEFAULTS)
-    main(config.gpu_config(), config.model_config(defaults))
+    main(config.gpu_config(), config.model_config(defaults).FLAGS)

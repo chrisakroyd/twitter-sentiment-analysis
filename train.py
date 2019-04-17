@@ -4,12 +4,14 @@ from tqdm import tqdm
 from src import config, constants, metrics, models, pipeline, train_utils, util
 
 
-def train(sess_config, params):
+def train(sess_config, params, debug=False):
     model_dir, log_dir = util.save_paths(params)
     word_index_path, _, char_index_path, pos_index_path = util.index_paths(params)
     embedding_paths = util.embedding_paths(params)
     meta_path = util.meta_path(params)
     util.make_dirs([model_dir, log_dir])
+
+    util.save_config(params, path=util.config_path(params), overwrite=False)  # Saves the run parameters in a .json
 
     vocabs = util.load_vocab_files(paths=(word_index_path, char_index_path, pos_index_path))
     word_matrix, trainable_matrix, character_matrix = util.load_numpy_files(paths=embedding_paths)
@@ -88,7 +90,23 @@ def train(sess_config, params):
 
         for _ in range(int(total_steps - global_step)):
             global_step = sess.run(model.global_step) + 1
-            recall, precision, f1, _ = sess.run(fetches=train_outputs, feed_dict={handle: train_handle})
+
+            # In debug mode we record runtime metadata, e.g. Memory usage, performance
+            # Refer to https://www.tensorflow.org/guide/graph_viz#runtime_statistics for more information.
+            if debug and global_step % (params.checkpoint_every + 1) == 0:
+                run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+                run_metadata = tf.RunMetadata()
+
+                recall, precision, f1, _ = sess.run(fetches=train_outputs,
+                                                    feed_dict={handle: train_handle},
+                                                    options=run_options,
+                                                    run_metadata=run_metadata)
+
+                writer.add_run_metadata(run_metadata, 'step%04d' % global_step)
+                writer.flush()
+            else:
+                recall, precision, f1, _ = sess.run(fetches=train_outputs, feed_dict={handle: train_handle})
+
             train_preds.append((recall, precision, f1, ))
             pbar.update()
             # Save at the end of each epoch
@@ -121,4 +139,6 @@ def train(sess_config, params):
 
 if __name__ == '__main__':
     defaults = util.namespace_json(path=constants.FilePaths.DEFAULTS)
-    train(config.gpu_config(), config.model_config(defaults))
+    flags = config.model_config(defaults).FLAGS
+    params = util.load_config(flags, util.config_path(flags))  # Loads a pre-existing config otherwise == params
+    train(config.gpu_config(), params)

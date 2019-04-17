@@ -134,3 +134,9 @@ def meta_path(params):
 def classes_path(params):
     processed_dir = processed_data_directory(params)
     return os.path.join(processed_dir, constants.FileNames.CLASSES)
+
+
+def config_path(params):
+    """ Generates a path to a .json file containing parameters used for a train run. """
+    model_path, _ = save_paths(params)
+    return os.path.join(model_path, constants.FileNames.CONFIG)

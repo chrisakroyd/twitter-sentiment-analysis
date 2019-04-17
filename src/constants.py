@@ -41,10 +41,12 @@ class FileNames:
         * TF_RECORD: Tfrecord template string for storing processed train/dev files.
         * TRAIN: String representing train mode data.
         * DEV: String representing val mode data.
+        * CONFIG: Name of a model config file.
     """
     EXAMPLES = 'examples.json'
     META = 'meta.json'
     CLASSES = 'classes.json'
+    CONFIG = 'model_config.json'
     INDEX = '{embedding_type}_index.json'
     EMBEDDINGS = '{embedding_type}_embeddings.npy'
     TF_RECORD = '{name}.tfrecord'
