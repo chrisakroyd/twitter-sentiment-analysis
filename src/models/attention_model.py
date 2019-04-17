@@ -1,6 +1,5 @@
 import tensorflow as tf
 from tensorflow.keras.layers import Activation, Bidirectional, CuDNNLSTM, Dense, Dropout, Embedding
-
 from src import layers, train_utils
 
 
@@ -8,25 +7,19 @@ class AttentionModel(tf.keras.Model):
     def __init__(self, embedding_matrix, char_matrix, trainable_matrix, num_classes, params, **kwargs):
         super(AttentionModel, self).__init__(**kwargs)
         self.global_step = tf.train.get_or_create_global_step()
-        self.dropout = tf.placeholder_with_default(params.dropout, (), name='dropout')
-        self.attn_dropout = tf.placeholder_with_default(params.attn_dropout, (), name='attn_dropout')
         self.use_pos_tags = params.use_pos_tags
 
         self.embedding = layers.EmbeddingLayer(embedding_matrix, trainable_matrix, char_matrix,
                                                word_dim=params.embed_dim, char_dim=params.char_dim,
-                                               word_dropout=self.dropout, char_dropout=self.dropout / 2)
+                                               word_dropout=params.word_dropout, char_dropout=params.word_dropout / 2)
 
-        self.rnn_1 = layers.RNNBlock(params.rnn_type, params.hidden_units, dropout=self.dropout,
-                                     skip_connection=params.use_rnn_skip_connection, cudnn=params.cudnn,
-                                     bidirectional=True, return_sequences=True, name='bi_gru_1')
-
-        self.rnn_2 = layers.RNNBlock(params.rnn_type, params.hidden_units, dropout=self.dropout,
-                                     skip_connection=params.use_rnn_skip_connection, cudnn=params.cudnn,
-                                     bidirectional=True, return_sequences=True, name='bi_gru_2')
+        self.rnn_stack = layers.RNNStack(params.rnn_type, params.hidden_units, params.rnn_layers, dropout=params.rnn_dropout,
+                                         skip_connection=params.use_rnn_skip_connection, cudnn=params.cudnn,
+                                         bidirectional=True, return_sequences=True)
 
         self.attention = layers.Attention(return_attention=True)
 
-        self.attention_dropout = Dropout(self.attn_dropout, name='attention_dropout')
+        self.attention_dropout = Dropout(params.attn_dropout, name='attention_dropout')
 
         self.out = Dense(num_classes, name='output')
         self.preds = Activation('softmax')
@@ -39,9 +32,8 @@ class AttentionModel(tf.keras.Model):
         if self.use_pos_tags:
             text_emb = tf.concat([text_emb, tags], axis=-1)
 
-        rnn_1_out = self.rnn_1(text_emb, training=training)
-        rnn_2_out = self.rnn_2(rnn_1_out, training=training)
-        attn_out, attn_weights = self.attention(rnn_2_out, mask=attn_mask)
+        rnn_out = self.rnn_stack(text_emb, training=training)
+        attn_out, attn_weights = self.attention(rnn_out, mask=attn_mask)
         attn_out = self.attention_dropout(attn_out, training=training)
 
         logits = self.out(attn_out)
