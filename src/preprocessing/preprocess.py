@@ -1,6 +1,5 @@
 import random
 
-import tensorflow as tf
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
@@ -22,7 +21,7 @@ def get_data_sem_eval(data_dir):
     return df
 
 
-def fit_and_extract(data_set, tokenizer, classes, params):
+def fit_and_extract(data_set, tokenizer, classes):
     tweets = []
 
     for index, tweet in tqdm(data_set.iterrows()):
@@ -30,7 +29,7 @@ def fit_and_extract(data_set, tokenizer, classes, params):
         orig_tokens, modified_tokens, pos_tags = tokenizer.fit_on_texts(tweet_text)[-1]
         num_tokens = len(modified_tokens)
 
-        if 0 < num_tokens < params.max_tokens:
+        if num_tokens > 0:
             tweets.append({
                 'text': tweet['text'],
                 'orig_tokens': orig_tokens,
@@ -41,42 +40,6 @@ def fit_and_extract(data_set, tokenizer, classes, params):
             })
 
     return tweets, tokenizer
-
-
-def write_as_tf_record(path, data):
-    """ Shuffles the queries and writes out the context + queries as a .tfrecord file.
-
-        Args:
-            path: Output path for the .tfrecord file.
-            data:
-    """
-    records = []
-    shuffled = list(data)
-    random.shuffle(shuffled)
-    for data in shuffled:
-        encoded_orig_tokens = [m.encode('utf-8') for m in data['orig_tokens']]
-        encoded_tokens = [m.encode('utf-8') for m in data['tokens']]
-        encoded_tags = [m.encode('utf-8') for m in data['tags']]
-
-        orig_tokens = tf.train.Feature(bytes_list=tf.train.BytesList(value=encoded_orig_tokens))
-        tokens = tf.train.Feature(bytes_list=tf.train.BytesList(value=encoded_tokens))
-        tags = tf.train.Feature(bytes_list=tf.train.BytesList(value=encoded_tags))
-        num_tokens = tf.train.Feature(int64_list=tf.train.Int64List(value=[data['num_tokens']]))
-        label = tf.train.Feature(int64_list=tf.train.Int64List(value=[data['label']]))
-
-        record = tf.train.Example(features=tf.train.Features(feature={
-            'orig_tokens': orig_tokens,
-            'tokens': tokens,
-            'tags': tags,
-            'num_tokens': num_tokens,
-            'label': label,
-        }))
-
-        records.append(record)
-
-    with tf.python_io.TFRecordWriter(path) as writer:
-        for record in records:
-            writer.write(record.SerializeToString())
 
 
 def get_examples(tweets, num_examples=1000):
@@ -119,7 +82,7 @@ def process(params, data, print_classes=True):
     classes = data['class'].unique()
     classes = util.index_from_list(classes, skip_zero=False)
 
-    tweets, tokenizer = fit_and_extract(data, tokenizer, classes, params)
+    tweets, tokenizer = fit_and_extract(data, tokenizer, classes)
 
     tokenizer.init()
     word_index = tokenizer.word_index
@@ -142,8 +105,10 @@ def process(params, data, print_classes=True):
     num_classes = len(classes)
     print('Num classes: ' + str(num_classes))
 
-    write_as_tf_record(train_record_path, train)
-    write_as_tf_record(val_record_path, val)
+    writer = prepro.RecordWriter(params.max_tokens)
+    writer.write(train_record_path, train)
+    writer.write(val_record_path, val)
+
     examples = get_examples(train)
     meta = {
         'num_train': len(train),
