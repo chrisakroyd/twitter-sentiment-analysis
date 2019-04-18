@@ -1,4 +1,5 @@
-from src import config, constants, preprocess as prepro, util
+from src import config, constants, util
+from src import preprocessing as prepro
 
 
 def preprocess(params):

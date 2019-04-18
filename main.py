@@ -28,7 +28,7 @@ def main(sess_config, params):
         app = demo(sess_config, params)
         app.run(port=params.demo_server_port)
     else:
-        print('Unknown Mode.')
+        print('Unknown Mode: {}'.format(mode))
         exit(0)
 
 

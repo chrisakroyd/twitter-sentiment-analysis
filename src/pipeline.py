@@ -16,6 +16,7 @@ def tf_record_pipeline(filenames, buffer_size=1024, num_parallel_calls=4):
     str_feature = tf.FixedLenSequenceFeature([], tf.string, allow_missing=True)
 
     features = {
+        'orig_tokens': str_feature,
         'tokens': str_feature,
         'tags': str_feature,
         'num_tokens': int_feature,
@@ -55,7 +56,7 @@ def index_lookup(data, tables, char_limit=16, num_parallel_calls=4):
         # @TODO Revist the +1's -1 situation.
         # Get chars + lookup in table, as table is 0 indexed, we have the default at -1 for the pad which becomes 0
         # with the addition of 1 to again treat padding as 0 without needing to define a padding character.
-        chars = tf.string_split(fields['tokens'], delimiter='')
+        chars = tf.string_split(fields['orig_tokens'], delimiter='')
         chars = tf.sparse.to_dense(char_table.lookup(chars), default_value=-1) + 1
         chars = chars[:, :char_limit]
 

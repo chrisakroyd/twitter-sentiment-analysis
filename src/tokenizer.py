@@ -1,8 +1,20 @@
 import string
 from collections import Counter
 import spacy
+import re
 
 default_punct = set(string.punctuation)
+
+
+REGEX_LOOKUP = {
+    "EMAIL": "(?:^|(?<=[^\\w@.)]))(?:[\\w+-](?:\\.(?!\\.))?)*?[\\w+-]@(?:\\w-?)*?\\w+(?:\\.(?:[a-z]{2,})){1,3}(?:$|(?=\\b))",
+    "URL": "http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
+    "NUMBERS": "[-+]?([\d]+[.\d]*)",
+}
+
+url_regex = re.compile(REGEX_LOOKUP['URL'])
+email_regex = re.compile(REGEX_LOOKUP['EMAIL'])
+numbers_regex = re.compile(REGEX_LOOKUP['NUMBERS'])
 
 
 class Tokenizer(object):
@@ -31,6 +43,7 @@ class Tokenizer(object):
         self.tag_counter = Counter()
         self.vocab = set(vocab if vocab else [])
         self.trainable_words = set(trainable_words if trainable_words else [])
+        self.vocab = self.vocab | self.trainable_words
 
         self.word_index = word_index if word_index else {}
         self.char_index = char_index if char_index else {}
@@ -76,13 +89,24 @@ class Tokenizer(object):
             token_corrected = False
 
             if self.given_vocab and error_correct and text not in self.vocab:
-                # We generate a short list of candidate words and replace the
-                # original text if any of them are in the vocab.
-                for word in (text.lower(), text.capitalize(), text.lower().capitalize(), text.upper(), token.lemma_):
-                    if word in self.vocab:
-                        text = word
-                        token_corrected = True
-                        break
+                # Replace numbers, urls and emails with a token that is optionally trainable.
+                if numbers_regex.match(text):
+                    text = '-number-'
+                    token_corrected = True
+                elif url_regex.match(text):
+                    text = '-url-'
+                    token_corrected = True
+                elif email_regex.match(text):
+                    text = '-email-'
+                    token_corrected = True
+                else:
+                    # We generate a short list of candidate words and replace the
+                    # original text if any of them are in the vocab.
+                    for word in (text.lower(), text.capitalize(), text.lower().capitalize(), text.upper(), token.lemma_):
+                        if word in self.vocab:
+                            text = word
+                            token_corrected = True
+                            break
 
             if text not in self.filters and len(text) > 0:
                 if token_corrected:

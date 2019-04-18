@@ -2,9 +2,7 @@ import os
 import random
 import numpy as np
 import tensorflow as tf
-# from src import config, constants, demo_utils, models, pipeline, preprocessing as prepro, train_utils, util
-from src import config, constants, demo_utils, models, pipeline, train_utils, util, tokenizer as toke
-from src.preprocessor import TextPreProcessor
+from src import config, constants, demo_utils, models, pipeline, train_utils, util, tokenizer as toke, preprocessing as prepro
 
 API_VERSION = 1
 BAD_REQUEST_CODE = 400
@@ -39,7 +37,6 @@ def demo(sess_config, params):
     word_index, char_index, examples, meta, classes = util.load_multiple_jsons(paths=json_paths)
     reverse_classes = {value: key for key, value in classes.items()}
 
-    preprocessor = TextPreProcessor()
     tokenizer = toke.Tokenizer(lower=False,
                                oov_token=params.oov_token,
                                word_index=word_index,
@@ -81,7 +78,7 @@ def demo(sess_config, params):
             return json.dumps(demo_utils.get_error_response(constants.ErrorMessages.NO_TEXT,
                                                             data, error_code=1)), BAD_REQUEST_CODE
 
-        text = preprocessor.preprocess(data['text'])
+        text = prepro.clean(data['text'])
         tokens, modified_tokens = tokenizer.tokenize(text)
 
         if len(data['text']) <= 0 or len(tokens) <= 0:

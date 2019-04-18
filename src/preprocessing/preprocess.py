@@ -6,7 +6,7 @@ import pandas as pd
 from tqdm import tqdm
 
 from src import util, tokenizer as toke
-from src.preprocessor import TextPreProcessor
+from src import preprocessing as prepro
 from sklearn.model_selection import train_test_split
 
 
@@ -23,17 +23,17 @@ def get_data_sem_eval(data_dir):
 
 
 def fit_and_extract(data_set, tokenizer, classes, params):
-    preprocessor = TextPreProcessor()
     tweets = []
 
     for index, tweet in tqdm(data_set.iterrows()):
-        tweet_text = preprocessor.preprocess(tweet['text'])
-        _, modified_tokens, pos_tags = tokenizer.fit_on_texts(tweet_text)[-1]
+        tweet_text = prepro.clean(tweet['text'])
+        orig_tokens, modified_tokens, pos_tags = tokenizer.fit_on_texts(tweet_text)[-1]
         num_tokens = len(modified_tokens)
 
         if 0 < num_tokens < params.max_tokens:
             tweets.append({
                 'text': tweet['text'],
+                'orig_tokens': orig_tokens,
                 'tokens': modified_tokens,
                 'tags': pos_tags,
                 'num_tokens': num_tokens,
@@ -54,15 +54,18 @@ def write_as_tf_record(path, data):
     shuffled = list(data)
     random.shuffle(shuffled)
     for data in shuffled:
+        encoded_orig_tokens = [m.encode('utf-8') for m in data['orig_tokens']]
         encoded_tokens = [m.encode('utf-8') for m in data['tokens']]
         encoded_tags = [m.encode('utf-8') for m in data['tags']]
 
+        orig_tokens = tf.train.Feature(bytes_list=tf.train.BytesList(value=encoded_orig_tokens))
         tokens = tf.train.Feature(bytes_list=tf.train.BytesList(value=encoded_tokens))
         tags = tf.train.Feature(bytes_list=tf.train.BytesList(value=encoded_tags))
         num_tokens = tf.train.Feature(int64_list=tf.train.Int64List(value=[data['num_tokens']]))
         label = tf.train.Feature(int64_list=tf.train.Int64List(value=[data['label']]))
 
         record = tf.train.Example(features=tf.train.Features(feature={
+            'orig_tokens': orig_tokens,
             'tokens': tokens,
             'tags': tags,
             'num_tokens': num_tokens,
