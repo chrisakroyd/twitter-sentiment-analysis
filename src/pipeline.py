@@ -57,7 +57,7 @@ def index_lookup(data, tables, char_limit=16, num_parallel_calls=4):
         # Get chars + lookup in table, as table is 0 indexed, we have the default at -1 for the pad which becomes 0
         # with the addition of 1 to again treat padding as 0 without needing to define a padding character.
         chars = tf.string_split(fields['orig_tokens'], delimiter='')
-        chars = tf.sparse.to_dense(char_table.lookup(chars), default_value=-1) + 1
+        chars = tf.sparse.to_dense(char_table.lookup(chars)) + 1
         chars = chars[:, :char_limit]
 
         tags = tag_table.lookup(fields['tags'])
