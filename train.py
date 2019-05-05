@@ -43,13 +43,12 @@ def train(sess_config, params, debug=False):
         placeholders = iterator.get_next()
         training_flag = tf.placeholder_with_default(True, (), name='training_flag')
         # Features and labels.
-        model_inputs = train_utils.inputs_as_tuple(placeholders)
-        label_tensor = train_utils.labels_as_tuple(placeholders)[0]
+        label_tensor = util.unpack_dict(placeholders, keys=constants.PlaceholderKeys.LABEL_KEYS)[0]
 
         if params.model_type == constants.ModelTypes.ATTENTION:
-            logits, prediction, _ = model(model_inputs, training=training_flag)
+            logits, prediction, _ = model(placeholders, training=training_flag)
         else:
-            logits, prediction = model(model_inputs, training=training_flag)
+            logits, prediction = model(placeholders, training=training_flag)
 
         loss_op = model.compute_loss(logits, label_tensor, l2=params.l2)
 

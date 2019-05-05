@@ -154,3 +154,12 @@ class ModelTypes:
     ATTENTION = 'attention'
     CONC_POOL = 'concat_pool'
     POOL = 'pool'
+
+
+class PlaceholderKeys:
+    """ Constants for placeholder dict keys.
+        DEFAULT_INPUTS: Keys for model input, e.g. words, characters.
+        LABEL_KEYS: Keys for labels.
+    """
+    DEFAULT_INPUTS = ['words', 'chars', 'tags', 'num_tokens']
+    LABEL_KEYS = ['label']

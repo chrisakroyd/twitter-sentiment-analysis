@@ -225,3 +225,17 @@ def concat_load_tsvs(data_dir, save_path=None):
         full_data_set.to_csv(save_path, sep='\t', header=False)
 
     return full_data_set
+
+
+def unpack_dict(placeholder_dict, keys=None):
+    """ Unpacks a dictionary into a tuple with the values in the same order as the keys given by keys param.
+        Args:
+            placeholder_dict: A dict of input tensors.
+            keys: List of string keys representing the order placeholders should be returned.
+        Returns:
+            A tuple of input tensors.
+    """
+    if keys is None:
+        raise ValueError('No keys given to unpack_dict.')
+
+    return tuple([placeholder_dict[key] for key in keys if key in placeholder_dict])

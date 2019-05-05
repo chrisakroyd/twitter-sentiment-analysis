@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow.keras.layers import Activation, Bidirectional, CuDNNLSTM, Dense, Dropout, GlobalAveragePooling1D, GlobalMaxPool1D
-from src import layers, train_utils
+from src import layers, train_utils, util, constants
 
 
 class PoolingModel(tf.keras.Model):
@@ -34,7 +34,7 @@ class PoolingModel(tf.keras.Model):
         self.preds = Activation('softmax')
 
     def call(self, x, training=None, mask=None):
-        words, chars, tags, num_tokens = x
+        words, chars, tags, num_tokens = util.unpack_dict(x, keys=constants.PlaceholderKeys.DEFAULT_INPUTS)
         text_emb = self.embedding([words, chars], training=training)
 
         if self.use_pos_tags:
@@ -59,7 +59,7 @@ class PoolingModel(tf.keras.Model):
         return logits, preds
 
     def compute_loss(self, logits, labels, l2=None):
-        loss = tf.nn.softmax_cross_entropy_with_logits_v2(logits=logits, labels=labels)
+        loss = tf.losses.softmax_cross_entropy(logits=logits, onehot_labels=labels)
         loss = tf.reduce_mean(loss)
 
         if l2 is not None and l2 > 0.0:

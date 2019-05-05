@@ -56,10 +56,9 @@ def demo(sess_config, params):
     training_flag = tf.placeholder_with_default(False, (), name='training_flag')
     demo_dataset, demo_iter = pipeline.create_demo_pipeline(params, tables, pipeline_placeholders)
     demo_placeholders = demo_iter.get_next()
-    demo_inputs = train_utils.inputs_as_tuple(demo_placeholders)
 
     if params.model_type == constants.ModelTypes.ATTENTION:
-        logits, prediction, attn_weights = model(demo_inputs, training=training_flag)
+        logits, prediction, attn_weights = model(demo_placeholders, training=training_flag)
 
     else:
         raise ValueError(constants.ErrorMessages.DEMO_UNSUPPORTED_MODEL.format(model_type=params.model_type))

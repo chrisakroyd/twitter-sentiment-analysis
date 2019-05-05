@@ -38,13 +38,12 @@ def test(sess_config, params):
         placeholders = iterator.get_next()
         training_flag = tf.placeholder_with_default(False, (), name='training_flag')
         # Features and labels.
-        model_inputs = train_utils.inputs_as_tuple(placeholders)
-        label_tensor = train_utils.labels_as_tuple(placeholders)[0]
+        label_tensor = util.unpack_dict(placeholders, keys=constants.PlaceholderKeys.LABEL_KEYS)[0]
 
         if params.model_type == constants.ModelTypes.ATTENTION:
-            logits, prediction, _ = model(model_inputs, training=training_flag)
+            logits, prediction, _ = model(placeholders, training=training_flag)
         else:
-            logits, prediction = model(model_inputs, training=training_flag)
+            logits, prediction = model(placeholders, training=training_flag)
 
         recall = metrics.recall(label_tensor, prediction)
         precision = metrics.precision(label_tensor, prediction)
