@@ -1,7 +1,6 @@
 import React from 'react';
 import { render } from 'react-dom';
 import { createStore, applyMiddleware, combineReducers } from 'redux';
-import { routerMiddleware, routerReducer } from 'react-router-redux';
 import thunk from 'redux-thunk';
 
 import { loadClasses } from './actions/compositeActions';
@@ -9,18 +8,12 @@ import sentimentDemo from './reducers';
 import Root from './components/Root';
 
 import './index.scss';
-import createHashHistory from 'history/createHashHistory';
-
 let middleware;
-
-const history = createHashHistory();
-
 
 if (process.env.NODE_ENV !== 'production') {
   const { logger } = require('redux-logger');
   const { composeWithDevTools } = require('redux-devtools-extension');
   middleware = composeWithDevTools(applyMiddleware(
-    routerMiddleware(history),
     thunk,
     logger,
   ));
@@ -30,7 +23,6 @@ if (process.env.NODE_ENV !== 'production') {
 
 const reducers = combineReducers({
   ...sentimentDemo,
-  router: routerReducer,
 });
 
 const defaultState = {

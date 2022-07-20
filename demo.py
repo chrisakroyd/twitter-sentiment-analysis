@@ -104,7 +104,6 @@ def demo(sess_config, params):
         if 'text' not in data:
             return json.dumps(demo_utils.get_error_response(constants.ErrorMessages.NO_TEXT,
                                                             data, error_code=1)), BAD_REQUEST_CODE
-        print(data)
         text = prepro.clean(data['text'])
         tokens, _, tags = tokenizer.tokenize(text)
         modified_tokens = data['tokens']

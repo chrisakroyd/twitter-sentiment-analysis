@@ -1,5 +1,4 @@
 import { connect } from 'react-redux';
-import { withRouter } from 'react-router-dom';
 
 // Actions
 import { getPrediction, predictWithTokens, getExample, setText } from '../actions/compositeActions';
@@ -30,4 +29,4 @@ const mapDispatchToProps = dispatch => ({
   },
 });
 
-export default withRouter(connect(mapStateToProps, mapDispatchToProps)(Demo));
+export default connect(mapStateToProps, mapDispatchToProps)(Demo);

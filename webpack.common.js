@@ -9,7 +9,6 @@ const htmlWebpackPluginConfig = new HtmlWebpackPlugin({
   inject: 'body',
 });
 
-
 module.exports = {
   entry: './src/demo_ui/index.jsx',
   output: {

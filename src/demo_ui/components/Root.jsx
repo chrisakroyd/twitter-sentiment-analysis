@@ -1,17 +1,12 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Provider } from 'react-redux';
-import { Router, Route, Switch } from 'react-router-dom';
 import Home from '../containers/dashboard';
 
 
-const Root = ({ store, history }) => (
+const Root = ({ store }) => (
   <Provider store={store}>
-    <Router history={history}>
-      <Switch>
-        <Route path="/" component={Home} />
-      </Switch>
-    </Router>
+    <Home />
   </Provider>
 );
 
