@@ -101,3 +101,10 @@ ENV/
 .mypy_cache/
 
 node_modules
+/data/embeddings/
+/data/processed/
+/data/sem_eval/
+/data/sent_140/
+/models/logs/
+/models/checkpoints/
+.idea

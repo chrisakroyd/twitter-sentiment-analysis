@@ -125,7 +125,9 @@ def get_padded_shapes(max_tokens=-1, max_characters=16, num_classes=2, num_tags=
     shape_dict = {
         'words': [max_tokens],
         'chars': [max_tokens, max_characters],
-        'tags': [max_tokens, num_tags],
+        'tags': [num_tags],
+        'tokens': [max_tokens],
+        'orig_tokens': [max_tokens],
         'num_tokens': []
     }
 
@@ -240,6 +242,8 @@ def create_demo_pipeline(params, tables, data):
 def create_placeholders():
     return {
         'tokens': tf.placeholder(shape=(None, None, ), dtype=tf.string, name='tokens'),
+        'orig_tokens': tf.placeholder(shape=(None, None, ), dtype=tf.string, name='orig_tokens'),
+        'tags': tf.placeholder(shape=(None, None), dtype=tf.string, name='tags'),
         'num_tokens': tf.placeholder(shape=(None, ), dtype=tf.int32, name='num_tokens'),
     }
 

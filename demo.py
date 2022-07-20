@@ -51,7 +51,15 @@ def demo(sess_config, params):
     sess = tf.Session(config=sess_config)
     sess.run(tf.tables_initializer())
     # Initialise the model, pipelines + placeholders.
-    model = models.AttentionModel(word_matrix, character_matrix, trainable_matrix, meta['num_classes'], params)
+    if params.model_type == constants.ModelTypes.ATTENTION:
+        model = models.AttentionModel(word_matrix, character_matrix, trainable_matrix, meta['num_classes'], params)
+    elif params.model_type == constants.ModelTypes.CONC_POOL:
+        model = models.ConcatPoolingModel(word_matrix, character_matrix, trainable_matrix, meta['num_classes'], params)
+    elif params.model_type == constants.ModelTypes.POOL:
+        model = models.PoolingModel(word_matrix, character_matrix, trainable_matrix, meta['num_classes'], params)
+    else:
+        raise ValueError(constants.ErrorMessages.INVALID_MODEL_TYPE.format(model_type=params.model_type))
+
     pipeline_placeholders = pipeline.create_placeholders()
     training_flag = tf.placeholder_with_default(False, (), name='training_flag')
     demo_dataset, demo_iter = pipeline.create_demo_pipeline(params, tables, pipeline_placeholders)
@@ -59,7 +67,6 @@ def demo(sess_config, params):
 
     if params.model_type == constants.ModelTypes.ATTENTION:
         logits, prediction, attn_weights = model(demo_placeholders, training=training_flag)
-
     else:
         raise ValueError(constants.ErrorMessages.DEMO_UNSUPPORTED_MODEL.format(model_type=params.model_type))
 
@@ -78,13 +85,13 @@ def demo(sess_config, params):
                                                             data, error_code=1)), BAD_REQUEST_CODE
 
         text = prepro.clean(data['text'])
-        tokens, modified_tokens = tokenizer.tokenize(text)
+        tokens, modified_tokens, tags = tokenizer.tokenize(text)
 
         if len(data['text']) <= 0 or len(tokens) <= 0:
             return json.dumps(demo_utils.get_error_response(constants.ErrorMessages.INVALID_TEXT,
                                                             data, error_code=2)), BAD_REQUEST_CODE
 
-        return json.dumps(process(tokens, data))
+        return json.dumps(process(tokens, modified_tokens, tags, data))
 
     @app.route('/api/v{0}/model/predictTokens'.format(API_VERSION), methods=['POST'])
     def predict_tokens():
@@ -94,17 +101,25 @@ def demo(sess_config, params):
             return json.dumps(demo_utils.get_error_response(constants.ErrorMessages.NO_TOKENS,
                                                             data, error_code=3)), BAD_REQUEST_CODE
 
-        tokens = data['tokens']
+        if 'text' not in data:
+            return json.dumps(demo_utils.get_error_response(constants.ErrorMessages.NO_TEXT,
+                                                            data, error_code=1)), BAD_REQUEST_CODE
+        print(data)
+        text = prepro.clean(data['text'])
+        tokens, _, tags = tokenizer.tokenize(text)
+        modified_tokens = data['tokens']
 
         if len(tokens) <= 0:
             return json.dumps(demo_utils.get_error_response(constants.ErrorMessages.INVALID_TOKENS,
                                                             data, error_code=4)), BAD_REQUEST_CODE
 
-        return json.dumps(process(tokens, data))
+        return json.dumps(process(tokens, modified_tokens, tags, data))
 
-    def process(tokens, data):
+    def process(tokens, modified_tokens, tags, data):
         sess.run(demo_iter.initializer, feed_dict={
-            'tokens:0': np.array([tokens], dtype=np.str),
+            'tokens:0': np.array([modified_tokens], dtype=np.str),
+            'orig_tokens:0': np.array([tokens], dtype=np.str),
+            'tags:0': np.array([tags], dtype=np.str),
             'num_tokens:0': np.array([len(tokens)], dtype=np.int32),
         })
         _, probs, attn_out = sess.run(fetches=demo_outputs)
@@ -127,7 +142,6 @@ def demo(sess_config, params):
         return json.dumps({
             'numClasses': num_classes,
             'classes': reverse_classes,
-        
         })
 
     @app.route('/', defaults={'path': ''})
