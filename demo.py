@@ -146,7 +146,7 @@ def demo(sess_config, params):
     @app.route('/', defaults={'path': ''})
     @app.route('/<path:path>')
     def serve(path):
-        if path != '' and os.path.exists(params.dist_dir + path):
+        if path != '' and os.path.exists(os.path.join(params.dist_dir, path)):
             return send_from_directory(params.dist_dir, path)
         else:
             return send_from_directory(params.dist_dir, 'index.html')
